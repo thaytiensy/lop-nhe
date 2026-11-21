@@ -3,137 +3,630 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lớp Nhẹ — Công cụ cho giáo viên tiểu học</title>
+  <title>Lớp Nhẹ Pro — Trợ lý &amp; Bộ Office cho Giáo viên Tiểu học</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <!-- Thư viện Office thực tế (nhẹ, chạy trực tiếp trên trình duyệt, có fallback khi offline) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="#top">Lớp Nhẹ</a>
-    <nav class="nav">
-      <a href="#cong-cu">Công cụ</a>
-      <a href="#soan-giao-an">Soạn giáo án</a>
-      <a class="nav-cta" href="#bat-dau">Bắt đầu</a>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar" aria-label="Điều hướng chính">
+      <div class="sidebar-brand">
+        <div class="brand-logo" aria-hidden="true">LN</div>
+        <div>
+          <div class="brand-name">Lớp Nhẹ <span class="badge-pro">PRO</span></div>
+          <div class="brand-sub">Tiểu học · CTGDPT 2018</div>
+        </div>
+        <button type="button" class="icon-btn mobile-only" id="closeSidebar" aria-label="Đóng menu">✕</button>
+      </div>
 
-  <main id="top">
-    <section class="hero" aria-label="Giới thiệu">
-      <div class="hero-copy">
-        <p class="brand-mark">Lớp Nhẹ</p>
-        <h1>Bớt sổ sách. Thêm thời gian cho lớp.</h1>
-        <p class="lede">Ứng dụng giúp giáo viên tiểu học soạn giáo án nhanh, điểm danh một chạm, ghi sổ điểm và nhắn phụ huynh — gọn trong một chỗ.</p>
-        <div class="cta-row">
-          <a class="btn primary" href="#bat-dau">Mở lớp của tôi</a>
-          <a class="btn ghost" href="#noi-dau">Xem nỗi đau giải quyết</a>
+      <div class="class-picker-box">
+        <label class="micro-label" for="activeClassSelect">Lớp đang dạy</label>
+        <div class="class-picker-row">
+          <select id="activeClassSelect" aria-label="Chọn lớp"></select>
+          <button type="button" class="icon-btn" id="btnAddClassQuick" title="Thêm lớp mới">+</button>
         </div>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="chalk-board">
-          <span class="chalk-line">Tiết 1 · Toán</span>
-          <span class="chalk-line delay">Điểm danh xong</span>
-          <span class="chalk-line delay2">Nhắn PH: 2 dòng</span>
-        </div>
+
+      <nav class="nav-menu" role="tablist">
+        <button type="button" class="nav-item active" data-view="dashboard" role="tab" aria-selected="true">
+          <span class="nav-ico">◈</span><span>Tổng quan</span>
+        </button>
+        <button type="button" class="nav-item" data-view="attendance" role="tab">
+          <span class="nav-ico">✓</span><span>Lớp &amp; Điểm danh</span>
+        </button>
+        <button type="button" class="nav-item" data-view="grades" role="tab">
+          <span class="nav-ico">★</span><span>Sổ điểm TT27</span>
+        </button>
+        <button type="button" class="nav-item" data-view="lesson" role="tab">
+          <span class="nav-ico">✎</span><span>Giáo án 2345</span>
+        </button>
+        <button type="button" class="nav-item" data-view="parent" role="tab">
+          <span class="nav-ico">✉</span><span>Nhắn Phụ huynh</span>
+        </button>
+        <div class="nav-divider">VĂN PHÒNG TÍCH HỢP</div>
+        <button type="button" class="nav-item nav-office" data-view="office" role="tab">
+          <span class="nav-ico">▤</span><span>Bộ Office VIP</span>
+          <span class="pill-mini">3 in 1</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="sync-status"><span class="dot-ok"></span>Lưu tự động trên máy</div>
+        <button type="button" class="btn-link" id="btnLoadSample">Nạp dữ liệu mẫu</button>
       </div>
-    </section>
+    </aside>
 
-    <section id="noi-dau" class="pain">
-      <h2>Nỗi đau thường gặp</h2>
-      <p class="section-lead">Mỗi công cụ dưới đây gắn với một việc tốn giờ nhất trong tuần của cô/thầy.</p>
-      <ul class="pain-list">
-        <li><strong>Soạn giáo án đêm khuya</strong> — khung mục tiêu → hoạt động → đánh giá có sẵn.</li>
-        <li><strong>Điểm danh + sổ điểm rời</strong> — một danh sách học sinh, ghi ngay trên điện thoại.</li>
-        <li><strong>Nhắn phụ huynh lặp lại</strong> — mẫu tin ngắn, chỉnh tên học sinh rồi copy.</li>
-        <li><strong>Đề kiểm tra / phiếu bài tập</strong> — sinh nhanh theo chủ đề và mức độ.</li>
-      </ul>
-    </section>
-
-    <section id="cong-cu" class="tools">
-      <h2>Bốn công cụ trong tay</h2>
-      <p class="section-lead">Dữ liệu lưu trên máy bạn (trình duyệt). Không bắt buộc đăng nhập.</p>
-
-      <div class="tool-panel" id="bat-dau">
-        <div class="tool-tabs" role="tablist">
-          <button type="button" class="tab active" data-tab="lop" role="tab" aria-selected="true">Lớp &amp; điểm danh</button>
-          <button type="button" class="tab" data-tab="diem" role="tab">Sổ điểm</button>
-          <button type="button" class="tab" data-tab="giaoan" role="tab" id="soan-giao-an">Giáo án</button>
-          <button type="button" class="tab" data-tab="phuhuynh" role="tab">Nhắn PH</button>
-        </div>
-
-        <div class="tab-panel active" data-panel="lop">
-          <label class="field">Tên lớp
-            <input id="className" type="text" placeholder="Ví dụ: 3A" value="3A" />
-          </label>
-          <label class="field">Danh sách học sinh (mỗi dòng một tên)
-            <textarea id="studentList" rows="6" placeholder="Nguyễn Minh An&#10;Trần Bảo Ngọc&#10;Lê Hoàng Nam"></textarea>
-          </label>
-          <button type="button" class="btn primary" id="saveClass">Lưu lớp</button>
-          <div id="attendanceBox" class="attendance" hidden>
-            <h3>Điểm danh hôm nay</h3>
-            <div id="attendanceList"></div>
-            <button type="button" class="btn ghost" id="saveAttendance">Lưu điểm danh</button>
+    <!-- MAIN AREA -->
+    <div class="main-wrap">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" class="icon-btn mobile-only" id="openSidebar" aria-label="Mở menu">☰</button>
+          <div>
+            <h1 class="page-title" id="pageTitle">Tổng quan lớp học</h1>
+            <p class="page-sub" id="pageSub">Bớt sổ sách, gọn một chạm</p>
           </div>
         </div>
 
-        <div class="tab-panel" data-panel="diem" hidden>
-          <label class="field">Môn
-            <select id="subject">
-              <option>Toán</option>
-              <option>Tiếng Việt</option>
-              <option>Tiếng Anh</option>
-              <option>Tự nhiên và Xã hội</option>
-              <option>Đạo đức</option>
-            </select>
-          </label>
-          <label class="field">Bài kiểm / miệng / 15 phút
-            <input id="assessment" type="text" placeholder="KT 15 phút chương 2" />
-          </label>
-          <div id="gradeList" class="grade-list"></div>
-          <button type="button" class="btn primary" id="saveGrades">Lưu sổ điểm</button>
-        </div>
+        <div class="topbar-actions">
+          <input type="file" id="globalFileInput" hidden accept=".json,.xlsx,.xls,.csv,.txt,.docx,.html,.htm,.md" />
+          <button type="button" class="btn btn-soft" id="btnGlobalUpload" title="Tải lên sao lưu, danh sách Excel/CSV, hoặc tài liệu Word/Slide">
+            <span>↑</span><span>Tải lên</span>
+          </button>
 
-        <div class="tab-panel" data-panel="giaoan" hidden>
-          <div class="grid-2">
-            <label class="field">Môn
-              <input id="lpSubject" type="text" value="Toán" />
-            </label>
-            <label class="field">Khối
-              <input id="lpGrade" type="text" value="3" />
-            </label>
+          <div class="dropdown" id="downloadDropdown">
+            <button type="button" class="btn btn-primary" id="btnGlobalDownload">
+              <span>↓</span><span>Tải xuống</span>
+            </button>
+            <div class="dropdown-menu" id="downloadMenu" hidden>
+              <button type="button" data-dl="excel-all">📊 Xuất sổ lớp ra Excel (.xlsx)</button>
+              <button type="button" data-dl="backup-json">💾 Sao lưu toàn bộ dữ liệu (.json)</button>
+              <button type="button" data-dl="office-word">📄 Tải tài liệu Word đang soạn (.doc)</button>
+              <button type="button" data-dl="office-sheet">📗 Tải Bảng tính Office (.xlsx)</button>
+              <button type="button" data-dl="office-slides">📽 Tải Bài trình chiếu (.pptx)</button>
+            </div>
           </div>
-          <label class="field">Chủ đề / bài
-            <input id="lpTopic" type="text" placeholder="Phép nhân trong phạm vi 1000" />
-          </label>
-          <button type="button" class="btn primary" id="genLesson">Tạo khung giáo án</button>
-          <article id="lessonOut" class="lesson-out" hidden></article>
-          <button type="button" class="btn ghost" id="copyLesson" hidden>Sao chép giáo án</button>
-        </div>
 
-        <div class="tab-panel" data-panel="phuhuynh" hidden>
-          <label class="field">Học sinh
-            <select id="parentStudent"></select>
-          </label>
-          <label class="field">Loại tin
-            <select id="noteType">
-              <option value="khen">Khen tiến bộ</option>
-              <option value="nhac">Nhắc nộp bài / mang đồ</option>
-              <option value="vang">Báo vắng / sức khỏe</option>
-              <option value="hop">Mời họp phụ huynh</option>
-            </select>
-          </label>
-          <button type="button" class="btn primary" id="genNote">Tạo tin nhắn</button>
-          <textarea id="noteOut" rows="5" readonly placeholder="Tin nhắn sẽ hiện ở đây…"></textarea>
-          <button type="button" class="btn ghost" id="copyNote">Sao chép</button>
+          <button type="button" class="icon-btn" id="btnThemeToggle" title="Đổi giao diện Sáng / Tối" aria-label="Đổi giao diện">☾</button>
         </div>
-      </div>
-    </section>
-  </main>
+      </header>
 
-  <footer class="foot">
-    <p><strong>Lớp Nhẹ</strong> · Prototype miễn phí cho giáo viên tiểu học · dữ liệu lưu local trên máy bạn</p>
-  </footer>
+      <!-- CONTENT VIEWS -->
+      <main class="content">
+        <!-- 1. DASHBOARD -->
+        <section class="view active" data-panel="dashboard">
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-label">Sĩ số lớp</div>
+              <div class="kpi-val" id="kpiStudents">0</div>
+              <div class="kpi-note" id="kpiClassName">Chưa chọn lớp</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">Điểm danh hôm nay</div>
+              <div class="kpi-val" id="kpiPresent">—</div>
+              <div class="kpi-note" id="kpiAbsentNote">Chưa điểm danh</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">Điểm TB gần nhất</div>
+              <div class="kpi-val" id="kpiAvg">—</div>
+              <div class="kpi-note" id="kpiGradeNote">Chưa có bài kiểm tra</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">Tài liệu &amp; Giáo án</div>
+              <div class="kpi-val" id="kpiDocs">3</div>
+              <div class="kpi-note">Word · Excel · PowerPoint sẵn sàng</div>
+            </article>
+          </div>
+
+          <div class="grid-2-uneven">
+            <article class="card">
+              <div class="card-head">
+                <h2>Truy cập nhanh 1 chạm</h2>
+                <span class="tag">VIP Pro</span>
+              </div>
+              <div class="quick-grid">
+                <button type="button" class="quick-tile" data-jump="attendance">
+                  <strong>✓ Điểm danh nhanh</strong>
+                  <span>1 chạm cả lớp, xuất báo cáo</span>
+                </button>
+                <button type="button" class="quick-tile" data-jump="grades">
+                  <strong>★ Nhận xét Thông tư 27</strong>
+                  <span>Tự điền T / H / C theo điểm</span>
+                </button>
+                <button type="button" class="quick-tile" data-jump="lesson">
+                  <strong>✎ Soạn KHBD 2345</strong>
+                  <span>4 hoạt động chuẩn + xuất Word/Slide</span>
+                </button>
+                <button type="button" class="quick-tile" data-jump="parent">
+                  <strong>✉ Nhắn Zalo Phụ huynh</strong>
+                  <span>Mẫu tinh tế, cá nhân hóa tên bé</span>
+                </button>
+                <button type="button" class="quick-tile accent" data-jump-office="word">
+                  <strong>📄 Soạn thảo (Word)</strong>
+                  <span>A4, mẫu giáo án/biên bản, xuất .doc</span>
+                </button>
+                <button type="button" class="quick-tile accent" data-jump-office="sheet">
+                  <strong>📗 Bảng tính (Excel)</strong>
+                  <span>Công thức SUM/AVG/IF, xuất .xlsx</span>
+                </button>
+                <button type="button" class="quick-tile accent" data-jump-office="slides">
+                  <strong>📽 Trình chiếu (PowerPoint)</strong>
+                  <span>Chiếu toàn màn hình, xuất .pptx</span>
+                </button>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h2>Việc cần làm hôm nay</h2>
+                <button type="button" class="btn-xs" id="btnClearDone">Xóa việc xong</button>
+              </div>
+              <form class="inline-form" id="todoForm">
+                <input type="text" id="todoInput" placeholder="Thêm việc (VD: Gửi phiếu ôn cuối tuần)..." />
+                <button type="submit" class="btn btn-primary btn-sm">Thêm</button>
+              </form>
+              <ul class="todo-list" id="todoList"></ul>
+            </article>
+          </div>
+        </section>
+
+        <!-- 2. ATTENDANCE & CLASS -->
+        <section class="view" data-panel="attendance" hidden>
+          <div class="grid-2-uneven">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2>Điểm danh ngày</h2>
+                  <input type="date" id="attDate" class="date-inline" />
+                </div>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-soft btn-sm" id="btnAllPresent">✓ Tất cả có mặt</button>
+                  <button type="button" class="btn btn-soft btn-sm" id="btnExportAttCsv">↓ Xuất CSV</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="btnSaveAtt">Lưu điểm danh</button>
+                </div>
+              </div>
+              <div class="att-summary" id="attSummary"></div>
+              <div id="attendanceList" class="list-stack"></div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h2>Quản lý lớp &amp; Danh sách</h2>
+                <div class="btn-group">
+                  <input type="file" id="studentFileInput" hidden accept=".xlsx,.xls,.csv,.txt" />
+                  <button type="button" class="btn btn-soft btn-sm" id="btnImportStudents">↑ Nhập Excel/CSV</button>
+                </div>
+              </div>
+              <label class="field">
+                <span>Tên lớp (VD: 3A, 5B)</span>
+                <input type="text" id="classNameInput" placeholder="3A" />
+              </label>
+              <label class="field">
+                <span>Danh sách học sinh (mỗi dòng 1 em)</span>
+                <textarea id="studentTextarea" rows="11" placeholder="Nguyễn Minh An&#10;Trần Bảo Ngọc&#10;Lê Hoàng Nam"></textarea>
+              </label>
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="btnSaveClass">Lưu danh sách lớp</button>
+                <button type="button" class="btn btn-soft" id="btnSendClassToSheet">Đưa sang Excel</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 3. GRADES TT27 -->
+        <section class="view" data-panel="grades" hidden>
+          <article class="card">
+            <div class="card-head">
+              <h2>Sổ điểm &amp; Nhận xét chuẩn Thông tư 27</h2>
+              <div class="btn-group">
+                <button type="button" class="btn btn-soft btn-sm" id="btnAutoComment">✨ Tự điền nhận xét TT27</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnSendGradesToSheet">📗 Mở trong Excel</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnExportGradesXlsx">↓ Tải .xlsx</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnSaveGrades">Lưu đợt kiểm tra</button>
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <label class="field">
+                <span>Môn học</span>
+                <select id="gradeSubject">
+                  <option>Toán</option>
+                  <option>Tiếng Việt</option>
+                  <option>Tiếng Anh</option>
+                  <option>Tự nhiên và Xã hội</option>
+                  <option>Khoa học</option>
+                  <option>Lịch sử và Địa lí</option>
+                  <option>Đạo đức</option>
+                  <option>Tin học &amp; Công nghệ</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Đợt đánh giá</span>
+                <input type="text" id="gradeAssessment" value="Kiểm tra giữa kì I" placeholder="VD: KT định kì, Cuối kì I..." />
+              </label>
+              <label class="field">
+                <span>Thống kê nhanh</span>
+                <div class="stat-strip" id="gradeStatsStrip">Chưa nhập điểm</div>
+              </label>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:42px">#</th>
+                    <th style="min-width:160px">Họ và tên</th>
+                    <th style="width:92px">Điểm</th>
+                    <th style="width:96px">Mức TT27</th>
+                    <th>Nhận xét học bạ (có thể sửa)</th>
+                  </tr>
+                </thead>
+                <tbody id="gradeTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card mt-16">
+            <div class="card-head">
+              <h2>Lịch sử đợt kiểm tra đã lưu</h2>
+            </div>
+            <div id="gradeHistoryList" class="history-list"></div>
+          </article>
+        </section>
+
+        <!-- 4. LESSON PLAN CV 2345 -->
+        <section class="view" data-panel="lesson" hidden>
+          <div class="grid-2-uneven">
+            <article class="card">
+              <div class="card-head">
+                <h2>Soạn KHBD chuẩn Công văn 2345</h2>
+                <span class="tag">4 hoạt động</span>
+              </div>
+              <div class="form-row-2">
+                <label class="field">
+                  <span>Bộ sách</span>
+                  <select id="lpBook">
+                    <option>Kết nối tri thức với cuộc sống</option>
+                    <option>Chân trời sáng tạo</option>
+                    <option>Cánh Diều</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Khối lớp</span>
+                  <select id="lpGrade">
+                    <option value="1">Lớp 1</option>
+                    <option value="2">Lớp 2</option>
+                    <option value="3" selected>Lớp 3</option>
+                    <option value="4">Lớp 4</option>
+                    <option value="5">Lớp 5</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-row-2">
+                <label class="field">
+                  <span>Môn học</span>
+                  <select id="lpSubject">
+                    <option>Toán</option>
+                    <option>Tiếng Việt</option>
+                    <option>Tự nhiên và Xã hội</option>
+                    <option>Khoa học</option>
+                    <option>Đạo đức</option>
+                    <option>Tiếng Anh</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Thời lượng</span>
+                  <select id="lpDuration">
+                    <option>1 tiết (35 phút)</option>
+                    <option>2 tiết (70 phút)</option>
+                  </select>
+                </label>
+              </div>
+              <label class="field">
+                <span>Tên bài dạy / Chủ đề</span>
+                <input type="text" id="lpTopic" value="Bảng nhân 7 và vận dụng giải toán có lời văn" placeholder="Nhập tên bài dạy..." />
+              </label>
+              <label class="field">
+                <span>Trọng tâm cần nhấn mạnh (tùy chọn)</span>
+                <input type="text" id="lpFocus" placeholder="VD: Học sinh yếu cần thuộc bảng cửu chương qua trò chơi" />
+              </label>
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="btnGenLesson">✨ Tạo giáo án chuẩn 2345</button>
+                <button type="button" class="btn btn-soft" id="btnLessonToWord">📄 Mở trong Word</button>
+                <button type="button" class="btn btn-soft" id="btnLessonToSlides">📽 Tạo bộ Slide bài giảng</button>
+              </div>
+
+              <div class="preset-chips">
+                <span class="micro-label">Mẫu VIP gợi ý:</span>
+                <button type="button" class="chip" data-lp-preset="toan3">Toán 3 · Bảng nhân 7</button>
+                <button type="button" class="chip" data-lp-preset="tv4">Tiếng Việt 4 · Viết đoạn văn tả cây cối</button>
+                <button type="button" class="chip" data-lp-preset="tnxh2">TNXH 2 · An toàn khi tham gia giao thông</button>
+                <button type="button" class="chip" data-lp-preset="dd5">Đạo đức 5 · Tôn trọng sự khác biệt</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h2>Bản xem trước Kế hoạch bài dạy</h2>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-soft btn-sm" id="btnCopyLesson">Sao chép</button>
+                  <button type="button" class="btn btn-soft btn-sm" id="btnDownloadLessonDoc">↓ Tải .doc</button>
+                </div>
+              </div>
+              <div id="lessonPreview" class="doc-preview">
+                Bấm <strong>Tạo giáo án chuẩn 2345</strong> để sinh kế hoạch bài dạy đầy đủ Yêu cầu cần đạt, Đồ dùng, 4 hoạt động và Điều chỉnh sau bài dạy.
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 5. PARENT MESSAGING -->
+        <section class="view" data-panel="parent" hidden>
+          <div class="grid-2-uneven">
+            <article class="card">
+              <div class="card-head">
+                <h2>Soạn tin nhắn Phụ huynh chuẩn sư phạm</h2>
+                <span class="tag">Dán Zalo ngay</span>
+              </div>
+              <div class="form-row-2">
+                <label class="field">
+                  <span>Học sinh</span>
+                  <select id="parentStudent"></select>
+                </label>
+                <label class="field">
+                  <span>Xưng hô của giáo viên</span>
+                  <select id="teacherRole">
+                    <option value="Cô">Cô giáo</option>
+                    <option value="Thầy">Thầy giáo</option>
+                  </select>
+                </label>
+              </div>
+              <label class="field">
+                <span>Tình huống nhắn tin</span>
+                <select id="noteType">
+                  <option value="khen">🌟 Khen ngợi &amp; khích lệ tiến bộ</option>
+                  <option value="nhac">📝 Nhắc hoàn thành bài / mang đồ dùng khéo léo</option>
+                  <option value="vang">💛 Hỏi thăm khi con nghỉ học / sức khỏe</option>
+                  <option value="hop">📅 Thư mời họp phụ huynh</option>
+                  <option value="tuan">📋 Tổng kết tuần gửi nhóm lớp</option>
+                  <option value="kem">🤝 Trao đổi phối hợp kèm thêm cho con</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Chi tiết riêng (tùy chọn)</span>
+                <input type="text" id="noteExtra" placeholder="VD: Con làm đúng 9/10 bài Toán, phát biểu tự tin..." />
+              </label>
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="btnGenNote">✨ Tạo tin nhắn</button>
+                <button type="button" class="btn btn-soft" id="btnCopyNote">📋 Sao chép</button>
+                <button type="button" class="btn btn-soft" id="btnDownloadNotes">↓ Tải file .txt</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h2>Nội dung tin nhắn (chỉnh sửa trực tiếp)</h2>
+              </div>
+              <textarea id="noteOut" rows="12" class="note-editor" placeholder="Tin nhắn tinh tế, lịch sự và chuẩn mực sẽ hiện ở đây..."></textarea>
+              <div class="hint-line">Mẹo: Có thể chỉnh vài chữ rồi bấm <strong>Sao chép</strong> để dán thẳng vào Zalo phụ huynh.</div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 6. OFFICE SUITE VIP -->
+        <section class="view" data-panel="office" hidden>
+          <div class="office-tabs-bar">
+            <div class="office-switcher" role="tablist">
+              <button type="button" class="office-tab active" data-office="word">📄 Soạn thảo (Word)</button>
+              <button type="button" class="office-tab" data-office="sheet">📗 Bảng tính (Excel)</button>
+              <button type="button" class="office-tab" data-office="slides">📽 Trình chiếu (PowerPoint)</button>
+            </div>
+            <div class="office-file-meta">
+              <input type="text" id="officeDocTitle" class="doc-title-input" value="Tai-lieu-Lop-Nhe" aria-label="Tên tệp" />
+            </div>
+          </div>
+
+          <!-- 6A. WORD PROCESSOR -->
+          <div class="office-pane active" data-office-pane="word">
+            <div class="ribbon">
+              <div class="ribbon-group">
+                <select id="wordTemplateSelect" title="Nạp mẫu văn bản giáo viên">
+                  <option value="">+ Mẫu giáo viên VIP…</option>
+                  <option value="khbd">Kế hoạch bài dạy (CV 2345)</option>
+                  <option value="bienban">Biên bản họp phụ huynh</option>
+                  <option value="phieu">Phiếu bài tập cuối tuần</option>
+                  <option value="giaykhen">Thư khen học sinh xuất sắc</option>
+                  <option value="don">Đơn xin nghỉ phép / công tác</option>
+                </select>
+              </div>
+              <div class="ribbon-group">
+                <select id="wordFont" title="Phông chữ">
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Be Vietnam Pro">Be Vietnam Pro</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Georgia">Georgia</option>
+                </select>
+                <select id="wordSize" title="Cỡ chữ">
+                  <option value="2">10pt</option>
+                  <option value="3" selected>12pt</option>
+                  <option value="4">14pt</option>
+                  <option value="5">18pt</option>
+                  <option value="6">24pt</option>
+                </select>
+              </div>
+              <div class="ribbon-group">
+                <button type="button" class="tb-btn" data-cmd="bold" title="In đậm"><b>B</b></button>
+                <button type="button" class="tb-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>
+                <button type="button" class="tb-btn" data-cmd="underline" title="Gạch chân"><u>U</u></button>
+                <button type="button" class="tb-btn" data-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
+                <input type="color" id="wordForeColor" value="#111827" title="Màu chữ" class="tb-color" />
+                <input type="color" id="wordBackColor" value="#fef08a" title="Màu nền chữ" class="tb-color" />
+              </div>
+              <div class="ribbon-group">
+                <button type="button" class="tb-btn" data-cmd="justifyLeft" title="Căn trái">⬱</button>
+                <button type="button" class="tb-btn" data-cmd="justifyCenter" title="Căn giữa">≡</button>
+                <button type="button" class="tb-btn" data-cmd="justifyRight" title="Căn phải">⬰</button>
+                <button type="button" class="tb-btn" data-cmd="justifyFull" title="Căn đều">☰</button>
+              </div>
+              <div class="ribbon-group">
+                <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="Danh sách chấm">• List</button>
+                <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="Danh sách số">1. List</button>
+                <button type="button" class="tb-btn" id="btnWordTable" title="Chèn bảng">⊞ Bảng</button>
+                <button type="button" class="tb-btn" id="btnWordImage" title="Chèn ảnh">🖼 Ảnh</button>
+                <input type="file" id="wordImageInput" hidden accept="image/*" />
+                <button type="button" class="tb-btn" data-cmd="undo" title="Hoàn tác">↶</button>
+                <button type="button" class="tb-btn" data-cmd="redo" title="Làm lại">↷</button>
+              </div>
+              <div class="ribbon-group ml-auto">
+                <input type="file" id="wordUploadInput" hidden accept=".docx,.html,.htm,.txt,.md" />
+                <button type="button" class="btn btn-soft btn-sm" id="btnWordUpload">↑ Mở .docx/.txt</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnWordPrint">🖨 In / PDF</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnWordDownloadDoc">↓ Tải Word (.doc)</button>
+              </div>
+            </div>
+
+            <div class="word-canvas-bg">
+              <div id="wordEditor" class="a4-page" contenteditable="true" spellcheck="false"></div>
+            </div>
+            <div class="status-bar">
+              <span id="wordStats">0 từ · 0 ký tự</span>
+              <span>Khổ giấy A4 · Tự động lưu</span>
+            </div>
+          </div>
+
+          <!-- 6B. SPREADSHEET (EXCEL) -->
+          <div class="office-pane" data-office-pane="sheet" hidden>
+            <div class="ribbon">
+              <div class="ribbon-group">
+                <select id="sheetTemplateSelect" title="Nạp mẫu bảng tính">
+                  <option value="">+ Mẫu bảng tính VIP…</option>
+                  <option value="sync-grades">Đồng bộ Sổ điểm lớp hiện tại</option>
+                  <option value="sync-att">Đồng bộ Điểm danh lớp hiện tại</option>
+                  <option value="fund">Sổ Thu – Chi Quỹ lớp (có công thức)</option>
+                  <option value="schedule">Thời khóa biểu tuần (5 ngày)</option>
+                  <option value="blank">Bảng trống mới</option>
+                </select>
+              </div>
+              <div class="ribbon-group">
+                <button type="button" class="tb-btn" id="btnSheetBold" title="Đậm ô đang chọn"><b>B</b></button>
+                <button type="button" class="tb-btn" id="btnSheetAlign" title="Đổi căn lề ô">≡</button>
+                <input type="color" id="sheetBgColor" value="#dcfce7" title="Tô màu nền ô" class="tb-color" />
+                <button type="button" class="tb-btn" id="btnSheetSum" title="Chèn công thức SUM nhanh">Σ SUM</button>
+                <button type="button" class="tb-btn" id="btnSheetAvg" title="Chèn công thức AVERAGE">x̄ AVG</button>
+                <button type="button" class="tb-btn" id="btnSheetAddRow">+ Hàng</button>
+                <button type="button" class="tb-btn" id="btnSheetAddCol">+ Cột</button>
+              </div>
+              <div class="ribbon-group ml-auto">
+                <input type="file" id="sheetUploadInput" hidden accept=".xlsx,.xls,.csv" />
+                <button type="button" class="btn btn-soft btn-sm" id="btnSheetUpload">↑ Mở .xlsx/.csv</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnSheetDownloadCsv">↓ .csv</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnSheetDownloadXlsx">↓ Tải Excel (.xlsx)</button>
+              </div>
+            </div>
+
+            <div class="formula-bar">
+              <div class="cell-ref" id="sheetCellRef">A1</div>
+              <span class="fx-badge">fx</span>
+              <input type="text" id="sheetFormulaInput" placeholder="Nhập giá trị hoặc công thức: =SUM(B2:B6), =AVERAGE(C2:C6), =IF(B2>=8,&quot;T&quot;,&quot;H&quot;)" />
+            </div>
+
+            <div class="sheet-wrap">
+              <table class="sheet-table" id="sheetTable"></table>
+            </div>
+            <div class="status-bar">
+              <span id="sheetStats">Hỗ trợ công thức: SUM, AVERAGE, MIN, MAX, COUNT, IF, + - * /</span>
+              <span>Nhấp đúp hoặc gõ vào thanh fx</span>
+            </div>
+          </div>
+
+          <!-- 6C. PRESENTATION (POWERPOINT) -->
+          <div class="office-pane" data-office-pane="slides" hidden>
+            <div class="ribbon">
+              <div class="ribbon-group">
+                <button type="button" class="btn btn-soft btn-sm" id="btnSlideAdd">+ Thêm slide</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnSlideDup">⧉ Nhân bản</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnSlideDel">🗑 Xóa</button>
+              </div>
+              <div class="ribbon-group">
+                <select id="slideThemeSelect" title="Chủ đề slide">
+                  <option value="chalk">Bảng xanh phấn trắng</option>
+                  <option value="paper">Sách giáo khoa sáng</option>
+                  <option value="navy">Hiện đại xanh đậm</option>
+                  <option value="warm">Nắng ấm tiểu học</option>
+                </select>
+                <select id="slideLayoutSelect" title="Bố cục">
+                  <option value="title">Slide Bìa / Tiêu đề</option>
+                  <option value="content">Tiêu đề + Nội dung</option>
+                  <option value="two-col">Hai cột so sánh</option>
+                  <option value="quiz">Câu hỏi khởi động / Trò chơi</option>
+                </select>
+                <input type="file" id="slideImgInput" hidden accept="image/*" />
+                <button type="button" class="tb-btn" id="btnSlideImg">🖼 Chèn ảnh</button>
+              </div>
+              <div class="ribbon-group ml-auto">
+                <input type="file" id="slidesUploadInput" hidden accept=".json" />
+                <button type="button" class="btn btn-soft btn-sm" id="btnSlidesUpload">↑ Mở .json</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnSlidesPresent">▶ Trình chiếu</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnSlidesDownloadPptx">↓ Tải PowerPoint (.pptx)</button>
+              </div>
+            </div>
+
+            <div class="slides-workspace">
+              <div class="slides-rail" id="slidesRail"></div>
+              <div class="slide-stage-wrap">
+                <div class="slide-canvas theme-chalk layout-title" id="slideCanvas">
+                  <div class="slide-inner">
+                    <input type="text" id="slideTitleInput" class="slide-title-edit" placeholder="Tiêu đề slide..." />
+                    <div class="slide-body-grid" id="slideBodyGrid">
+                      <textarea id="slideBodyInput" class="slide-body-edit" placeholder="Nhập nội dung chính (mỗi dòng 1 ý)..."></textarea>
+                      <textarea id="slideCol2Input" class="slide-body-edit col2-only" placeholder="Cột thứ 2..." hidden></textarea>
+                      <div class="slide-img-slot" id="slideImgSlot" hidden>
+                        <img id="slideImgPreview" alt="Ảnh minh họa" />
+                        <button type="button" class="remove-img-btn" id="btnRemoveSlideImg" title="Xóa ảnh">✕</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="slide-footer-mark">
+                    <span>Lớp Nhẹ Pro</span>
+                    <span id="slideNumBadge">1 / 1</span>
+                  </div>
+                </div>
+
+                <label class="notes-box">
+                  <span class="micro-label">Ghi chú giáo viên (Speaker Notes)</span>
+                  <textarea id="slideNotesInput" rows="2" placeholder="Lời dẫn giảng, thời gian hoạt động, câu hỏi gợi mở..."></textarea>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN PRESENTER OVERLAY -->
+  <div class="presenter-overlay" id="presenterOverlay" hidden>
+    <div class="presenter-stage" id="presenterStage"></div>
+    <div class="presenter-controls">
+      <button type="button" id="presPrev">← Trước</button>
+      <span id="presCounter">1 / 1</span>
+      <button type="button" id="presNext">Tiếp →</button>
+      <button type="button" id="presExit">✕ Thoát (Esc)</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="office.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
