@@ -730,6 +730,31 @@ window.OfficeSuite = (() => {
     switchTab("slides");
   }
 
+  async function importSlidesFile(file) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+    try {
+      if (ext === "pptx") {
+        const slides = await window.PptxNative.parsePptx(await file.arrayBuffer());
+        loadSlides(slides, baseName);
+        notifyFn(`Đã mở PowerPoint: ${file.name} (${slides.length} slide — sẵn sàng sửa & trình chiếu)`);
+        return;
+      }
+      if (ext === "json") {
+        const arr = JSON.parse(await file.text());
+        if (Array.isArray(arr) && arr.length) {
+          loadSlides(arr, baseName);
+          notifyFn(`Đã mở bộ slide (${arr.length} slide)`);
+          return;
+        }
+      }
+      notifyFn("Định dạng slide không hợp lệ (hỗ trợ .pptx và .json)");
+    } catch (err) {
+      console.error(err);
+      notifyFn(err?.message || "Không đọc được file PowerPoint này");
+    }
+  }
+
   function exportSlidesPptx() {
     try {
       const filename = safeFilename("pptx");
@@ -891,10 +916,7 @@ window.OfficeSuite = (() => {
     $("#slidesUploadInput").addEventListener("change", async (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
-      try {
-        const arr = JSON.parse(await f.text());
-        if (Array.isArray(arr) && arr.length) { loadSlides(arr, f.name.replace(/\.json$/i, "")); notifyFn("Đã mở bộ slide"); }
-      } catch { notifyFn("File .json không hợp lệ"); }
+      await importSlidesFile(f);
       e.target.value = "";
     });
 
@@ -935,6 +957,7 @@ window.OfficeSuite = (() => {
     loadSlides,
     importWordFile,
     importSheetFile,
+    importSlidesFile,
     exportWordDoc,
     exportSheetXlsx,
     exportSlidesPptx,

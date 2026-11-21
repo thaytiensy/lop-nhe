@@ -548,6 +548,11 @@
       toast("File .json không hợp lệ");
       return;
     }
+    if (ext === "pptx") {
+      showView("office", "slides");
+      await window.OfficeSuite.importSlidesFile(file);
+      return;
+    }
     if (["docx", "html", "htm", "md", "txt"].includes(ext)) {
       showView("office", "word");
       await window.OfficeSuite.importWordFile(file);
