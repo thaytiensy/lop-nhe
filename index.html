@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lớp Nhẹ — Công cụ cho giáo viên tiểu học</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#top">Lớp Nhẹ</a>
+    <nav class="nav">
+      <a href="#cong-cu">Công cụ</a>
+      <a href="#soan-giao-an">Soạn giáo án</a>
+      <a class="nav-cta" href="#bat-dau">Bắt đầu</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-label="Giới thiệu">
+      <div class="hero-copy">
+        <p class="brand-mark">Lớp Nhẹ</p>
+        <h1>Bớt sổ sách. Thêm thời gian cho lớp.</h1>
+        <p class="lede">Ứng dụng giúp giáo viên tiểu học soạn giáo án nhanh, điểm danh một chạm, ghi sổ điểm và nhắn phụ huynh — gọn trong một chỗ.</p>
+        <div class="cta-row">
+          <a class="btn primary" href="#bat-dau">Mở lớp của tôi</a>
+          <a class="btn ghost" href="#noi-dau">Xem nỗi đau giải quyết</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="chalk-board">
+          <span class="chalk-line">Tiết 1 · Toán</span>
+          <span class="chalk-line delay">Điểm danh xong</span>
+          <span class="chalk-line delay2">Nhắn PH: 2 dòng</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="noi-dau" class="pain">
+      <h2>Nỗi đau thường gặp</h2>
+      <p class="section-lead">Mỗi công cụ dưới đây gắn với một việc tốn giờ nhất trong tuần của cô/thầy.</p>
+      <ul class="pain-list">
+        <li><strong>Soạn giáo án đêm khuya</strong> — khung mục tiêu → hoạt động → đánh giá có sẵn.</li>
+        <li><strong>Điểm danh + sổ điểm rời</strong> — một danh sách học sinh, ghi ngay trên điện thoại.</li>
+        <li><strong>Nhắn phụ huynh lặp lại</strong> — mẫu tin ngắn, chỉnh tên học sinh rồi copy.</li>
+        <li><strong>Đề kiểm tra / phiếu bài tập</strong> — sinh nhanh theo chủ đề và mức độ.</li>
+      </ul>
+    </section>
+
+    <section id="cong-cu" class="tools">
+      <h2>Bốn công cụ trong tay</h2>
+      <p class="section-lead">Dữ liệu lưu trên máy bạn (trình duyệt). Không bắt buộc đăng nhập.</p>
+
+      <div class="tool-panel" id="bat-dau">
+        <div class="tool-tabs" role="tablist">
+          <button type="button" class="tab active" data-tab="lop" role="tab" aria-selected="true">Lớp &amp; điểm danh</button>
+          <button type="button" class="tab" data-tab="diem" role="tab">Sổ điểm</button>
+          <button type="button" class="tab" data-tab="giaoan" role="tab" id="soan-giao-an">Giáo án</button>
+          <button type="button" class="tab" data-tab="phuhuynh" role="tab">Nhắn PH</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="lop">
+          <label class="field">Tên lớp
+            <input id="className" type="text" placeholder="Ví dụ: 3A" value="3A" />
+          </label>
+          <label class="field">Danh sách học sinh (mỗi dòng một tên)
+            <textarea id="studentList" rows="6" placeholder="Nguyễn Minh An&#10;Trần Bảo Ngọc&#10;Lê Hoàng Nam"></textarea>
+          </label>
+          <button type="button" class="btn primary" id="saveClass">Lưu lớp</button>
+          <div id="attendanceBox" class="attendance" hidden>
+            <h3>Điểm danh hôm nay</h3>
+            <div id="attendanceList"></div>
+            <button type="button" class="btn ghost" id="saveAttendance">Lưu điểm danh</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="diem" hidden>
+          <label class="field">Môn
+            <select id="subject">
+              <option>Toán</option>
+              <option>Tiếng Việt</option>
+              <option>Tiếng Anh</option>
+              <option>Tự nhiên và Xã hội</option>
+              <option>Đạo đức</option>
+            </select>
+          </label>
+          <label class="field">Bài kiểm / miệng / 15 phút
+            <input id="assessment" type="text" placeholder="KT 15 phút chương 2" />
+          </label>
+          <div id="gradeList" class="grade-list"></div>
+          <button type="button" class="btn primary" id="saveGrades">Lưu sổ điểm</button>
+        </div>
+
+        <div class="tab-panel" data-panel="giaoan" hidden>
+          <div class="grid-2">
+            <label class="field">Môn
+              <input id="lpSubject" type="text" value="Toán" />
+            </label>
+            <label class="field">Khối
+              <input id="lpGrade" type="text" value="3" />
+            </label>
+          </div>
+          <label class="field">Chủ đề / bài
+            <input id="lpTopic" type="text" placeholder="Phép nhân trong phạm vi 1000" />
+          </label>
+          <button type="button" class="btn primary" id="genLesson">Tạo khung giáo án</button>
+          <article id="lessonOut" class="lesson-out" hidden></article>
+          <button type="button" class="btn ghost" id="copyLesson" hidden>Sao chép giáo án</button>
+        </div>
+
+        <div class="tab-panel" data-panel="phuhuynh" hidden>
+          <label class="field">Học sinh
+            <select id="parentStudent"></select>
+          </label>
+          <label class="field">Loại tin
+            <select id="noteType">
+              <option value="khen">Khen tiến bộ</option>
+              <option value="nhac">Nhắc nộp bài / mang đồ</option>
+              <option value="vang">Báo vắng / sức khỏe</option>
+              <option value="hop">Mời họp phụ huynh</option>
+            </select>
+          </label>
+          <button type="button" class="btn primary" id="genNote">Tạo tin nhắn</button>
+          <textarea id="noteOut" rows="5" readonly placeholder="Tin nhắn sẽ hiện ở đây…"></textarea>
+          <button type="button" class="btn ghost" id="copyNote">Sao chép</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><strong>Lớp Nhẹ</strong> · Prototype miễn phí cho giáo viên tiểu học · dữ liệu lưu local trên máy bạn</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
