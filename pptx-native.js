@@ -333,7 +333,11 @@ window.PptxNative = (() => {
     };
   }
 
-  async function parsePptx(arrayBuffer) {
+  async function parsePptx(arrayBuffer, filename = "slides.pptx") {
+    if (window.OfficeIO?.parseSlides) {
+      const res = await window.OfficeIO.parseSlides(arrayBuffer, filename);
+      return res.slides;
+    }
     const files = await unzipEntries(arrayBuffer);
 
     // Determine slide order from presentation.xml + rels

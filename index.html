@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=4" />
   <!-- Thư viện đọc/xuất Excel & Word .docx (có sẵn fallback nội bộ khi offline) -->
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
@@ -105,7 +105,7 @@
         </div>
 
         <div class="topbar-actions">
-          <input type="file" id="globalFileInput" hidden accept=".json,.xlsx,.xls,.csv,.txt,.docx,.pptx,.html,.htm,.md" />
+          <input type="file" id="globalFileInput" hidden accept=".json,.docx,.doc,.rtf,.txt,.md,.html,.htm,.xlsx,.xls,.csv,.tsv,.pptx,.ppt" />
           <button type="button" class="btn btn-soft" id="btnGlobalUpload" title="Tải lên hoặc kéo thả file vào màn hình">
             <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <span>Tải lên</span>
@@ -367,7 +367,7 @@
               <div class="card-head">
                 <h2>Danh bạ học sinh &amp; Phụ huynh</h2>
                 <div class="btn-group">
-                  <input type="file" id="studentFileInput" hidden accept=".xlsx,.xls,.csv,.txt" />
+                  <input type="file" id="studentFileInput" hidden accept=".xlsx,.xls,.csv,.tsv,.txt" />
                   <button type="button" class="btn btn-soft btn-sm" id="btnImportStudents">↑ Nhập Excel/CSV</button>
                   <button type="button" class="btn btn-soft btn-sm" id="btnSendClassToSheet">📗 Mở Excel</button>
                 </div>
@@ -684,8 +684,8 @@
                 <button type="button" class="tb-btn" data-cmd="redo" title="Làm lại">↷</button>
               </div>
               <div class="ribbon-group ml-auto">
-                <input type="file" id="wordUploadInput" hidden accept=".docx,.html,.htm,.txt,.md" />
-                <button type="button" class="btn btn-soft btn-sm" id="btnWordUpload">↑ Mở .docx</button>
+                <input type="file" id="wordUploadInput" hidden accept=".docx,.doc,.rtf,.html,.htm,.txt,.md" />
+                <button type="button" class="btn btn-soft btn-sm" id="btnWordUpload">↑ Mở .docx/.doc</button>
                 <button type="button" class="btn btn-soft btn-sm" id="btnWordPrint">In / PDF</button>
                 <button type="button" class="btn btn-primary btn-sm" id="btnWordDownloadDoc">↓ Tải .doc</button>
               </div>
@@ -725,8 +725,8 @@
                 <button type="button" class="tb-btn" id="btnSheetAddCol">+ Cột</button>
               </div>
               <div class="ribbon-group ml-auto">
-                <input type="file" id="sheetUploadInput" hidden accept=".xlsx,.xls,.csv" />
-                <button type="button" class="btn btn-soft btn-sm" id="btnSheetUpload">↑ Mở .xlsx/.csv</button>
+                <input type="file" id="sheetUploadInput" hidden accept=".xlsx,.xls,.csv,.tsv,.txt" />
+                <button type="button" class="btn btn-soft btn-sm" id="btnSheetUpload">↑ Mở .xlsx/.xls/.csv</button>
                 <button type="button" class="btn btn-soft btn-sm" id="btnSheetDownloadCsv">↓ .csv</button>
                 <button type="button" class="btn btn-primary btn-sm" id="btnSheetDownloadXlsx">↓ Tải .xlsx</button>
               </div>
@@ -792,8 +792,8 @@
                 <button type="button" class="tb-btn" id="btnSlideImg">🖼 Ảnh</button>
               </div>
               <div class="ribbon-group ml-auto">
-                <input type="file" id="slidesUploadInput" hidden accept=".pptx,.json" />
-                <button type="button" class="btn btn-soft btn-sm" id="btnSlidesUpload">↑ Mở .pptx/.json</button>
+                <input type="file" id="slidesUploadInput" hidden accept=".pptx,.ppt,.json" />
+                <button type="button" class="btn btn-soft btn-sm" id="btnSlidesUpload">↑ Mở .pptx/.ppt</button>
                 <button type="button" class="btn btn-soft btn-sm" id="btnSlidesPresent">▶ Chiếu</button>
                 <button type="button" class="btn btn-soft btn-sm" id="btnSlidesDownloadHtml">↓ .html</button>
                 <button type="button" class="btn btn-primary btn-sm" id="btnSlidesDownloadPptx">↓ Tải PowerPoint (.pptx)</button>
@@ -852,16 +852,17 @@
     <div class="drop-box">
       <div class="drop-ico">↑</div>
       <h3>Thả file vào đây để mở ngay</h3>
-      <p>Hỗ trợ: PowerPoint .pptx · Word .docx/.txt · Excel .xlsx/.csv · Sao lưu .json</p>
+      <p>Hỗ trợ: PowerPoint .pptx/.ppt · Word .docx/.doc/.rtf/.txt · Excel .xlsx/.xls/.csv · Sao lưu .json</p>
     </div>
   </div>
 
   <!-- TOAST -->
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-  <script src="pptx-native.js"></script>
-  <script src="data.js"></script>
-  <script src="office.js"></script>
-  <script src="app.js"></script>
+  <script src="office-io.js?v=4"></script>
+  <script src="pptx-native.js?v=4"></script>
+  <script src="data.js?v=4"></script>
+  <script src="office.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

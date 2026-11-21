@@ -19,22 +19,42 @@ window.OfficeSuite = (() => {
   let getCtxFn = () => ({ profile: window.GvcnData.DEFAULT_PROFILE, cls: { name: "3A", students: [], attendance: {}, grades: [] } });
 
   function save() {
-    try { localStorage.setItem(OFFICE_KEY, JSON.stringify(state)); } catch {}
+    try {
+      localStorage.setItem(OFFICE_KEY, JSON.stringify(state));
+    } catch {
+      // Nếu file nhập có ảnh dung lượng lớn làm vượt ngưỡng localStorage, lưu bản không ảnh để không bị lỗi
+      try {
+        const slim = {
+          ...state,
+          slides: state.slides.map((s) => ({ ...s, img: s.img && s.img.length > 60000 ? "" : s.img })),
+          wordDocs: state.wordDocs.map((d) => ({ ...d, html: d.html && d.html.length > 200000 ? d.html.slice(0, 200000) : d.html }))
+        };
+        localStorage.setItem(OFFICE_KEY, JSON.stringify(slim));
+      } catch {}
+    }
   }
 
   function makeSheetObj(name, aoa) {
-    const rows = Math.max(15, aoa.length + 5);
-    const maxCols = aoa.reduce((m, r) => Math.max(m, r.length), 6);
-    const cols = Math.max(8, maxCols + 2);
+    const safeAoa = Array.isArray(aoa) && aoa.length ? aoa : [[""]];
+    const maxR = Math.min(safeAoa.length, 500);
+    const rows = Math.max(15, Math.min(520, maxR + 5));
+    let maxCols = 6;
+    for (let r = 0; r < maxR; r++) {
+      if (Array.isArray(safeAoa[r]) && safeAoa[r].length > maxCols) maxCols = safeAoa[r].length;
+    }
+    const cols = Math.max(8, Math.min(40, maxCols + 2));
     const cells = {};
-    aoa.forEach((row, r) => {
-      row.forEach((val, c) => {
+    for (let r = 0; r < maxR; r++) {
+      const row = safeAoa[r] || [];
+      const colLimit = Math.min(row.length, cols);
+      for (let c = 0; c < colLimit; c++) {
+        const val = row[c];
         if (val !== "" && val !== null && val !== undefined) {
           cells[`${r},${c}`] = { v: val, bold: r === 0, bg: r === 0 ? "#e6f5f3" : "" };
         }
-      });
-    });
-    return { name, rows, cols, cells, selected: { r: 0, c: 0 } };
+      }
+    }
+    return { name: String(name || "Sheet 1"), rows, cols, cells, selected: { r: 0, c: 0 } };
   }
 
   function load() {
@@ -140,21 +160,32 @@ window.OfficeSuite = (() => {
   }
 
   async function importWordFile(file) {
-    const ext = file.name.split(".").pop().toLowerCase();
     const baseName = file.name.replace(/\.[^.]+$/, "");
-    if (ext === "docx" && window.mammoth) {
+    try {
       const buf = await file.arrayBuffer();
-      const res = await window.mammoth.convertToHtml({ arrayBuffer: buf });
-      openInWord(res.value || "<p>(Tệp trống)</p>", baseName);
-      notifyFn(`Đã mở file Word: ${file.name}`);
-      return;
+      if (window.OfficeIO?.parseWord) {
+        const { html, warning } = await window.OfficeIO.parseWord(buf, file.name);
+        openInWord(html || "<p>(Tệp trống)</p>", baseName);
+        notifyFn(warning || `Đã mở tài liệu Word: ${file.name}`);
+        return;
+      }
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (ext === "docx" && window.mammoth) {
+        const res = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+        openInWord(res.value || "<p>(Tệp trống)</p>", baseName);
+        notifyFn(`Đã mở file Word: ${file.name}`);
+        return;
+      }
+      const text = await file.text();
+      const html = (ext === "html" || ext === "htm")
+        ? text
+        : text.split(/\r?\n/).map((l) => `<p>${l.replace(/&/g, "&amp;").replace(/</g, "&lt;") || "&nbsp;"}</p>`).join("");
+      openInWord(html, baseName);
+      notifyFn(`Đã mở văn bản: ${file.name}`);
+    } catch (err) {
+      console.error("importWordFile error:", err);
+      notifyFn(err?.message || `Không đọc được tệp Word: ${file.name}`);
     }
-    const text = await file.text();
-    const html = (ext === "html" || ext === "htm")
-      ? text
-      : text.split(/\r?\n/).map((l) => `<p>${l.replace(/&/g, "&amp;").replace(/</g, "&lt;") || "&nbsp;"}</p>`).join("");
-    openInWord(html, baseName);
-    notifyFn(`Đã mở văn bản: ${file.name}`);
   }
 
   function initWord() {
@@ -280,7 +311,7 @@ window.OfficeSuite = (() => {
   }
 
   function parseRef(ref) {
-    const m = /^([A-Z]+)(\d+)$/i.exec(ref.trim());
+    const m = /^\$?([A-Z]+)\$?(\d+)$/i.exec(ref.trim());
     if (!m) return null;
     const letters = m[1].toUpperCase();
     let col = 0;
@@ -323,7 +354,7 @@ window.OfficeSuite = (() => {
       expr = expr.replace(/\b(SUM|AVERAGE|AVG|MIN|MAX|COUNT)\(([^)]+)\)/gi, (_, fn, argStr) => {
         let nums = [];
         argStr.split(",").forEach((part) => {
-          const rm = /^([A-Z]+\d+):([A-Z]+\d+)$/i.exec(part.trim());
+          const rm = /^(\$?[A-Z]+\$?\d+):(\$?[A-Z]+\$?\d+)$/i.exec(part.trim());
           if (rm) nums = nums.concat(expandRange(rm[1], rm[2]));
           else {
             const p = parseRef(part);
@@ -342,7 +373,7 @@ window.OfficeSuite = (() => {
       });
 
       if (!/^["'].*["']$/.test(expr)) {
-        expr = expr.replace(/\b([A-Z]+\d+)\b/gi, (ref) => {
+        expr = expr.replace(/(?<![A-Z0-9_])\$?([A-Z]+)\$?(\d+)\b/gi, (ref) => {
           const p = parseRef(ref);
           if (!p) return 0;
           const v = evalCell(sheet, p.r, p.c, depth + 1);
@@ -464,24 +495,43 @@ window.OfficeSuite = (() => {
   }
 
   async function importSheetFile(file) {
-    const ext = file.name.split(".").pop().toLowerCase();
     const baseName = file.name.replace(/\.[^.]+$/, "");
-    if ((ext === "xlsx" || ext === "xls") && window.XLSX) {
-      const wb = window.XLSX.read(await file.arrayBuffer(), { type: "array" });
-      state.sheets = wb.SheetNames.map((n) => makeSheetObj(n, window.XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: "" })));
-      state.activeSheetIdx = 0;
-      state.title = baseName;
-      if ($("#officeDocTitle")) $("#officeDocTitle").value = baseName;
-      save();
-      renderSheet();
-      switchTab("sheet");
-      notifyFn(`Đã mở Excel: ${file.name} (${state.sheets.length} sheet)`);
-      return;
+    try {
+      const buf = await file.arrayBuffer();
+      if (window.OfficeIO?.parseExcel) {
+        const { sheets, warning } = await window.OfficeIO.parseExcel(buf, file.name);
+        if (!sheets || !sheets.length) throw new Error("Không tìm thấy dữ liệu bảng tính trong tệp.");
+        state.sheets = sheets.map((s) => makeSheetObj(s.name, s.aoa));
+        state.activeSheetIdx = 0;
+        state.title = baseName;
+        if ($("#officeDocTitle")) $("#officeDocTitle").value = baseName;
+        save();
+        renderSheet();
+        switchTab("sheet");
+        notifyFn(warning || `Đã mở Excel: ${file.name} (${state.sheets.length} sheet)`);
+        return;
+      }
+      const ext = file.name.split(".").pop().toLowerCase();
+      if ((ext === "xlsx" || ext === "xls") && window.XLSX) {
+        const wb = window.XLSX.read(buf, { type: "array" });
+        state.sheets = wb.SheetNames.map((n) => makeSheetObj(n, window.XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: "" })));
+        state.activeSheetIdx = 0;
+        state.title = baseName;
+        if ($("#officeDocTitle")) $("#officeDocTitle").value = baseName;
+        save();
+        renderSheet();
+        switchTab("sheet");
+        notifyFn(`Đã mở Excel: ${file.name} (${state.sheets.length} sheet)`);
+        return;
+      }
+      const text = await file.text();
+      const aoa = text.split(/\r?\n/).filter((l) => l.trim()).map((line) => line.split(/[,;\t]/).map((c) => c.replace(/^"|"$/g, "").trim()));
+      loadSheetData(aoa, baseName.slice(0, 22), baseName);
+      notifyFn(`Đã mở bảng tính: ${file.name}`);
+    } catch (err) {
+      console.error("importSheetFile error:", err);
+      notifyFn(err?.message || `Không đọc được tệp bảng tính: ${file.name}`);
     }
-    const text = await file.text();
-    const aoa = text.split(/\r?\n/).filter((l) => l.trim()).map((line) => line.split(/[,;\t]/).map((c) => c.replace(/^"|"$/g, "").trim()));
-    loadSheetData(aoa, baseName.slice(0, 22), baseName);
-    notifyFn(`Đã mở bảng tính: ${file.name}`);
   }
 
   function startInlineEdit(td) {
@@ -731,11 +781,18 @@ window.OfficeSuite = (() => {
   }
 
   async function importSlidesFile(file) {
-    const ext = file.name.split(".").pop().toLowerCase();
     const baseName = file.name.replace(/\.[^.]+$/, "");
     try {
+      const buf = await file.arrayBuffer();
+      if (window.OfficeIO?.parseSlides) {
+        const { slides, warning } = await window.OfficeIO.parseSlides(buf, file.name);
+        loadSlides(slides, baseName);
+        notifyFn(warning || `Đã mở PowerPoint: ${file.name} (${slides.length} slide — sẵn sàng sửa & trình chiếu)`);
+        return;
+      }
+      const ext = file.name.split(".").pop().toLowerCase();
       if (ext === "pptx") {
-        const slides = await window.PptxNative.parsePptx(await file.arrayBuffer());
+        const slides = await window.PptxNative.parsePptx(buf, file.name);
         loadSlides(slides, baseName);
         notifyFn(`Đã mở PowerPoint: ${file.name} (${slides.length} slide — sẵn sàng sửa & trình chiếu)`);
         return;
@@ -748,9 +805,9 @@ window.OfficeSuite = (() => {
           return;
         }
       }
-      notifyFn("Định dạng slide không hợp lệ (hỗ trợ .pptx và .json)");
+      notifyFn("Định dạng slide không hợp lệ (hỗ trợ .pptx, .ppt và .json)");
     } catch (err) {
-      console.error(err);
+      console.error("importSlidesFile error:", err);
       notifyFn(err?.message || "Không đọc được file PowerPoint này");
     }
   }

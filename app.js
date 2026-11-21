@@ -495,38 +495,41 @@
   }
 
   async function importStudentListFile(file) {
-    const ext = file.name.split(".").pop().toLowerCase();
-    let parsed = [];
-    if ((ext === "xlsx" || ext === "xls") && window.XLSX) {
-      const wb = window.XLSX.read(await file.arrayBuffer(), { type: "array" });
-      const rows = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+    try {
+      const parsed = [];
+      let rows = [];
+      if (window.OfficeIO?.parseExcel) {
+        const { sheets } = await window.OfficeIO.parseExcel(await file.arrayBuffer(), file.name);
+        rows = sheets?.[0]?.aoa || [];
+      } else {
+        const txt = await file.text();
+        rows = txt.split(/\r?\n/).map((line) => line.split(/[,;\t]/).map((c) => c.replace(/^"|"$/g, "").trim()));
+      }
       rows.forEach((r) => {
-        const strCells = r.map((x) => String(x ?? "").trim()).filter(Boolean);
-        const name = strCells.find((c) => c.length > 2 && !/^(stt|họ|tên|ho ten|\d+)$/i.test(c));
+        const strCells = (r || []).map((x) => String(x ?? "").trim()).filter(Boolean);
+        if (!strCells.length) return;
+        const name = strCells.find((c) => c.length > 2 && !/^(stt|họ|tên|họ và tên|ho ten|danh sách|danh bạ|lớp|\d+)$/i.test(c) && !/^0\d{8,10}$/.test(c.replace(/\s+/g, "")));
         if (name) {
           const phone = strCells.find((c) => /^0\d{8,10}$/.test(c.replace(/\s+/g, ""))) || "";
-          parsed.push({ name, parent: "", phone });
+          const nameIdx = strCells.indexOf(name);
+          const parent = strCells.find((c, idx) => idx > nameIdx && c !== phone && c.length > 1 && !/^\d+$/.test(c)) || "";
+          parsed.push({ name, parent, phone });
         }
       });
-    } else {
-      const txt = await file.text();
-      txt.split(/\r?\n/).forEach((line) => {
-        const parts = line.split(/[,;\t]/).map((c) => c.replace(/^"|"$/g, "").trim()).filter(Boolean);
-        if (!parts.length || /^(stt|họ và tên|họ tên)/i.test(parts[0])) return;
-        const name = /^\d+$/.test(parts[0]) ? parts[1] : parts[0];
-        if (name) parsed.push({ name, parent: parts[2] || "", phone: parts[3] || "" });
-      });
+      if (!parsed.length) return toast("Không tìm thấy danh sách học sinh trong file");
+      const cls = getActiveClass();
+      cls.students = parsed.map((s, i) => ({ id: `s${Date.now()}_${i}`, ...s, note: "" }));
+      save();
+      renderAll();
+      toast(`Đã nhập ${parsed.length} học sinh vào lớp ${cls.name}`);
+    } catch (err) {
+      console.error("importStudentListFile error:", err);
+      toast(err?.message || "Không đọc được danh sách học sinh từ tệp này");
     }
-    if (!parsed.length) return toast("Không tìm thấy danh sách học sinh trong file");
-    const cls = getActiveClass();
-    cls.students = parsed.map((s, i) => ({ id: `s${Date.now()}_${i}`, ...s, note: "" }));
-    save();
-    renderAll();
-    toast(`Đã nhập ${parsed.length} học sinh vào lớp ${cls.name}`);
   }
 
   async function handleGlobalUpload(file) {
-    const ext = file.name.split(".").pop().toLowerCase();
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
     if (ext === "json") {
       try {
         const parsed = JSON.parse(await file.text());
@@ -548,22 +551,32 @@
       toast("File .json không hợp lệ");
       return;
     }
-    if (ext === "pptx") {
+
+    // Tự kiểm tra định dạng thật của nội dung (tránh lỗi khi file bị đổi sai đuôi)
+    let detectedKind = "";
+    try {
+      if (window.OfficeIO?.detectKind) {
+        const info = await window.OfficeIO.detectKind(await file.arrayBuffer(), file.name);
+        detectedKind = info?.kind || "";
+      }
+    } catch {}
+
+    if (detectedKind === "pptx" || detectedKind === "ppt-bin" || ["pptx", "ppt"].includes(ext)) {
       showView("office", "slides");
       await window.OfficeSuite.importSlidesFile(file);
       return;
     }
-    if (["docx", "html", "htm", "md", "txt"].includes(ext)) {
-      showView("office", "word");
-      await window.OfficeSuite.importWordFile(file);
-      return;
-    }
-    if (["xlsx", "xls", "csv"].includes(ext)) {
+    if (["xlsx", "xls-bin", "xls-html", "xls-xml", "csv"].includes(detectedKind) || ["xlsx", "xls", "csv", "tsv"].includes(ext)) {
       showView("office", "sheet");
       await window.OfficeSuite.importSheetFile(file);
       return;
     }
-    toast("Định dạng file chưa hỗ trợ");
+    if (["docx", "doc-bin", "doc-xml", "mhtml", "html", "rtf", "md", "txt"].includes(detectedKind) || ["docx", "doc", "rtf", "html", "htm", "md", "txt"].includes(ext)) {
+      showView("office", "word");
+      await window.OfficeSuite.importWordFile(file);
+      return;
+    }
+    toast("Định dạng file chưa hỗ trợ (hỗ trợ Word, Excel, PowerPoint, CSV, TXT, JSON)");
   }
 
   /* ===================== WIRE EVENTS ===================== */
