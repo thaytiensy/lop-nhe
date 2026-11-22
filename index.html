@@ -3,11 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trợ lý GVCN — Quản lý lớp &amp; Bộ Office cho Giáo viên</title>
+  <title>Trợ lý GVCN — Quản lý lớp, Sổ điểm TT27, Giáo án 2345 &amp; Bộ Office miễn phí</title>
+  <meta name="description" content="Ứng dụng miễn phí cho Giáo viên chủ nhiệm: Điểm danh, lưu SĐT &amp; nhắn Zalo phụ huynh, Sổ điểm Thông tư 27 tự xếp T/H/C, soạn Giáo án CV 2345 và Bộ Office Word · Excel · PowerPoint (.pptx) ngay trên trình duyệt." />
+  <meta name="keywords" content="Trợ lý GVCN, quản lý lớp học, sổ điểm Thông tư 27, giáo án CV 2345, nhắn tin phụ huynh Zalo, công cụ giáo viên tiểu học, soạn PowerPoint bài giảng" />
+  <meta name="author" content="Trợ lý GVCN" />
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="canonical" href="https://lop-nhe.vercel.app/" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Open Graph / Facebook / Zalo -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="vi_VN" />
+  <meta property="og:site_name" content="Trợ lý GVCN" />
+  <meta property="og:url" content="https://lop-nhe.vercel.app/" />
+  <meta property="og:title" content="Trợ lý GVCN — Nhẹ việc lớp mỗi ngày cho Giáo viên chủ nhiệm" />
+  <meta property="og:description" content="Điểm danh, Sổ điểm Thông tư 27, Giáo án CV 2345, nhắn Zalo phụ huynh &amp; Bộ Office 3-in-1 (Word · Excel · PowerPoint .pptx). Dùng miễn phí ngay, không cần đăng nhập." />
+  <meta property="og:image" content="https://lop-nhe.vercel.app/og-cover.png" />
+  <meta property="og:image:secure_url" content="https://lop-nhe.vercel.app/og-cover.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Trợ lý GVCN — Quản lý lớp học, Sổ điểm TT27, Giáo án 2345 và Bộ Office 3-in-1 cho Giáo viên" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Trợ lý GVCN — Nhẹ việc lớp mỗi ngày cho Giáo viên chủ nhiệm" />
+  <meta name="twitter:description" content="Điểm danh, Sổ điểm TT27, Giáo án CV 2345, nhắn Zalo phụ huynh &amp; Bộ Office Word · Excel · PowerPoint miễn phí ngay trên trình duyệt." />
+  <meta name="twitter:image" content="https://lop-nhe.vercel.app/og-cover.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Trợ lý GVCN",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web, Windows, macOS, Android, iOS",
+    "inLanguage": "vi",
+    "url": "https://lop-nhe.vercel.app/",
+    "image": "https://lop-nhe.vercel.app/og-cover.png",
+    "description": "Công cụ quản lý lớp học, điểm danh, sổ điểm Thông tư 27, giáo án CV 2345 và bộ Office Word · Excel · PowerPoint cho Giáo viên chủ nhiệm.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "VND"
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=5" />
   <!-- Thư viện đọc/xuất Excel & Word .docx (có sẵn fallback nội bộ khi offline) -->
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
@@ -21,7 +67,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
         <div class="brand-text">
-          <div class="brand-name">Trợ lý GVCN <span class="badge-pro">PRO</span></div>
+          <div class="brand-name">Trợ lý GVCN <button type="button" class="badge-pro" id="brandProBadge" title="Xem Gói Pro &amp; Đặt thiết kế riêng">PRO</button></div>
           <div class="brand-sub" id="sidebarSchoolSub">Chưa nhập tên trường</div>
         </div>
         <button type="button" class="icon-btn mobile-only" id="closeSidebar" aria-label="Đóng menu">✕</button>
@@ -80,6 +126,13 @@
         </button>
       </nav>
 
+      <div class="sidebar-pro-box">
+        <button type="button" class="sidebar-pro-btn" id="btnSidebarPro">
+          <span class="sp-top"><strong>⭐ Gói Pro &amp; Đặt làm App</strong><span class="sp-arrow">→</span></span>
+          <span class="sp-sub">Đồng bộ đa thiết bị · Tùy chỉnh theo trường</span>
+        </button>
+      </div>
+
       <div class="sidebar-foot">
         <div class="sync-status"><span class="dot-ok"></span>Lưu tự động</div>
         <button type="button" class="btn-link" id="btnLoadSample">Dữ liệu mẫu</button>
@@ -105,6 +158,12 @@
         </div>
 
         <div class="topbar-actions">
+          <button type="button" class="btn btn-soft btn-guide-reopen" id="btnShowOnboarding" hidden title="Mở lại hướng dẫn nhanh 3 bước">
+            <span>❓ Hướng dẫn 3 bước</span>
+          </button>
+          <button type="button" class="btn btn-pro-pill" id="btnTopbarPro" title="Xem Gói Pro GVCN &amp; Đặt thiết kế riêng theo trường">
+            <span>⭐ Gói Pro / Đặt riêng</span>
+          </button>
           <input type="file" id="globalFileInput" hidden accept=".json,.docx,.doc,.rtf,.txt,.md,.html,.htm,.xlsx,.xls,.csv,.tsv,.pptx,.ppt" />
           <button type="button" class="btn btn-soft" id="btnGlobalUpload" title="Tải lên hoặc kéo thả file vào màn hình">
             <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -146,8 +205,51 @@
             <div class="hero-actions">
               <button type="button" class="btn btn-white" data-jump="profile">✎ Cập nhật thông tin Trường · Lớp</button>
               <button type="button" class="btn btn-glass" data-jump="attendance">✓ Điểm danh ngay</button>
+              <button type="button" class="btn btn-glass" id="btnHeroSample" title="Nạp lại dữ liệu mẫu lớp 3A để trải nghiệm nhanh">✨ Dữ liệu mẫu</button>
             </div>
           </div>
+
+          <!-- ONBOARDING 3-STEP QUICK GUIDE (DISMISSIBLE) -->
+          <section class="onboarding-banner" id="onboardingBanner" aria-label="Hướng dẫn bắt đầu nhanh">
+            <div class="ob-head">
+              <div class="ob-title-wrap">
+                <div class="ob-trust-row">
+                  <span class="trust-pill">✓ Miễn phí tính năng lõi</span>
+                  <span class="trust-pill">✓ Không cần đăng nhập</span>
+                  <span class="trust-pill">✓ Lưu riêng tư trên máy</span>
+                </div>
+                <h3>Lần đầu ghé Trợ lý GVCN? Bắt đầu nhẹ nhàng trong 3 bước:</h3>
+              </div>
+              <div class="ob-head-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="btnOnboardingSample">✨ Dùng thử với dữ liệu mẫu</button>
+                <button type="button" class="btn btn-soft btn-sm" id="btnOnboardingShare">↗ Chia sẻ cho đồng nghiệp</button>
+                <button type="button" class="btn-xs" id="btnDismissOnboarding" title="Thu gọn hướng dẫn">✕ Ẩn</button>
+              </div>
+            </div>
+            <div class="ob-steps">
+              <button type="button" class="ob-step" data-jump="profile">
+                <span class="ob-num">1</span>
+                <span class="ob-body">
+                  <strong>Điền Trường · Lớp · GVCN</strong>
+                  <span>Nhập 1 lần — tự động điền vào Giáo án, Sổ điểm, Biên bản &amp; Slide họp PH.</span>
+                </span>
+              </button>
+              <button type="button" class="ob-step" data-jump="attendance">
+                <span class="ob-num">2</span>
+                <span class="ob-body">
+                  <strong>Điểm danh &amp; Sổ điểm TT27</strong>
+                  <span>Chạm điểm danh, lưu SĐT phụ huynh, tự xếp mức T/H/C &amp; nhắn Zalo nhanh.</span>
+                </span>
+              </button>
+              <button type="button" class="ob-step" data-jump="lesson">
+                <span class="ob-num">3</span>
+                <span class="ob-body">
+                  <strong>Soạn Giáo án 2345 &amp; Office 3-in-1</strong>
+                  <span>Chỉnh trực tiếp, tải file Word (.doc), Excel (.xlsx) &amp; PowerPoint (.pptx) thật.</span>
+                </span>
+              </button>
+            </div>
+          </section>
 
           <!-- KPI CARDS -->
           <div class="kpi-grid">
@@ -246,6 +348,19 @@
               </form>
               <ul class="todo-list" id="todoList"></ul>
             </article>
+          </div>
+
+          <!-- MONETIZATION / CUSTOM SCHOOL PROMO STRIP -->
+          <div class="promo-strip" id="dashboardPromoBanner">
+            <div class="promo-strip-main">
+              <span class="promo-kicker">GÓI NÂNG CAO &amp; THIẾT KẾ THEO YÊU CẦU</span>
+              <h3>Cần bản riêng mang logo Trường học, đồng bộ Điện thoại – Máy tính hoặc đặt làm App Giáo dục riêng?</h3>
+              <p>Hỗ trợ tùy chỉnh đúng biểu mẫu Phòng/Sở GD&amp;ĐT, quản lý đa lớp cho BGH và lập trình công cụ số gọn nhẹ cho giáo viên, nhà trường.</p>
+            </div>
+            <div class="promo-strip-actions">
+              <button type="button" class="btn btn-amber" id="btnDashboardPro">⭐ Xem Gói Pro &amp; Bảng giá</button>
+              <button type="button" class="btn btn-soft" id="btnDashboardCustomApp">🛠 Đặt thiết kế riêng</button>
+            </div>
           </div>
         </section>
 
@@ -834,6 +949,103 @@
     </div>
   </div>
 
+  <!-- PRO & CUSTOM SCHOOL MODAL -->
+  <div class="modal-backdrop" id="proModal" role="dialog" aria-modal="true" aria-labelledby="proModalTitle" hidden>
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <div>
+          <span class="modal-kicker">GÓI NÂNG CẤP &amp; ĐẶT THIẾT KẾ RIÊNG</span>
+          <h2 id="proModalTitle">Nâng cấp Trợ lý GVCN Pro hoặc Đặt App riêng theo Trường</h2>
+          <p class="modal-sub">Toàn bộ tính năng lõi vẫn miễn phí cho giáo viên cá nhân. Nâng cấp khi cần đồng bộ đa thiết bị, mẫu nâng cao hoặc bản thiết kế riêng cho nhà trường.</p>
+        </div>
+        <button type="button" class="icon-btn modal-close" id="btnCloseProModal" aria-label="Đóng cửa sổ">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="proContactBar" class="contact-status-bar"></div>
+
+        <!-- 3 PLANS -->
+        <div class="plans-grid" id="proPlansGrid"></div>
+        <p class="price-disclaimer" id="proPriceDisclaimer"></p>
+
+        <!-- COMPARISON TABLE -->
+        <div class="compare-block">
+          <h3>So sánh nhanh giữa các gói</h3>
+          <div class="table-wrap">
+            <table class="data-table compare-table">
+              <thead>
+                <tr>
+                  <th>Tính năng / Quyền lợi</th>
+                  <th>Bản Miễn phí</th>
+                  <th class="col-pro-head">Gói Pro GVCN</th>
+                  <th>Thiết kế riêng Trường / App</th>
+                </tr>
+              </thead>
+              <tbody id="proCompareBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- INQUIRY FORM -->
+        <section class="inquiry-block" id="proInquirySection">
+          <div class="inq-head">
+            <h3>Gửi yêu cầu tư vấn / Đặt thiết kế riêng</h3>
+            <p>Điền nhanh nhu cầu bên dưới — hệ thống tự soạn tin nhắn rõ ràng để thầy/cô sao chép gửi Zalo hoặc Email trong 1 chạm.</p>
+          </div>
+          <div class="inq-grid">
+            <div class="inq-form">
+              <div class="form-row-2">
+                <label class="field">
+                  <span>Nhu cầu quan tâm</span>
+                  <select id="inqService"></select>
+                </label>
+                <label class="field">
+                  <span>Quy mô dự kiến</span>
+                  <select id="inqScale">
+                    <option value="1 lớp (GVCN cá nhân)">1 lớp (GVCN cá nhân)</option>
+                    <option value="Tổ khối (3 – 10 giáo viên)">Tổ khối (3 – 10 giáo viên)</option>
+                    <option value="Toàn trường (10 – 50+ giáo viên)">Toàn trường (10 – 50+ giáo viên)</option>
+                    <option value="Đặt làm Web App / Công cụ riêng">Đặt làm Web App / Công cụ riêng</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-row-2">
+                <label class="field">
+                  <span>Họ tên thầy/cô hoặc người liên hệ</span>
+                  <input type="text" id="inqName" placeholder="VD: Cô Nguyễn Minh Anh" />
+                </label>
+                <label class="field">
+                  <span>SĐT / Zalo nhận tư vấn</span>
+                  <input type="text" id="inqPhone" placeholder="VD: 09xx xxx xxx" />
+                </label>
+              </div>
+              <label class="field">
+                <span>Tên Trường / Đơn vị / Lớp</span>
+                <input type="text" id="inqSchool" placeholder="VD: Trường Tiểu học Hòa Bình — Khối 3" />
+              </label>
+              <label class="field">
+                <span>Yêu cầu cụ thể (tùy chọn)</span>
+                <textarea id="inqNote" rows="3" placeholder="VD: Muốn gắn logo trường, thêm biểu mẫu nhận xét riêng của Phòng GD, hoặc đặt làm app quản lý..."></textarea>
+              </label>
+            </div>
+
+            <div class="inq-preview-col">
+              <label class="field">
+                <span>Nội dung yêu cầu soạn sẵn (tự cập nhật)</span>
+                <textarea id="inqPreview" rows="9" readonly></textarea>
+              </label>
+              <div class="inq-actions">
+                <button type="button" class="btn btn-primary" id="btnCopyInquiry">📋 Sao chép nội dung gửi Zalo</button>
+                <button type="button" class="btn btn-amber" id="btnSendZalo">💬 Mở Zalo tư vấn</button>
+                <button type="button" class="btn btn-soft" id="btnSendEmail">✉ Gửi qua Email</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <!-- FULLSCREEN PRESENTER OVERLAY -->
   <div class="presenter-overlay" id="presenterOverlay" hidden>
     <div class="presenter-stage" id="presenterStage"></div>
@@ -859,10 +1071,12 @@
   <!-- TOAST -->
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-  <script src="office-io.js?v=4"></script>
-  <script src="pptx-native.js?v=4"></script>
-  <script src="data.js?v=4"></script>
-  <script src="office.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="office-io.js?v=5"></script>
+  <script src="pptx-native.js?v=5"></script>
+  <script src="data.js?v=5"></script>
+  <script src="office.js?v=5"></script>
+  <script src="app.js?v=5"></script>
+  <script src="monetization-config.js?v=5"></script>
+  <script src="monetization.js?v=5"></script>
 </body>
 </html>

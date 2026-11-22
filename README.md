@@ -14,3 +14,9 @@
   - **Word A4:** Quản lý nhiều tài liệu, chèn Quốc hiệu & Trường/Lớp 1 chạm, 6 mẫu GVCN, mở `.docx`, tải `.doc` / In PDF.
   - **Excel:** Nhiều Sheet, điều hướng phím mũi tên như Excel thật, công thức `SUM/AVERAGE/MIN/MAX/COUNT/IF`, mở & tải `.xlsx`/`.csv`.
   - **PowerPoint:** Tạo file `.pptx` thật trực tiếp nội bộ (không phụ thuộc CDN, tải tức thì 100%, mở tốt trên PowerPoint/Google Slides/WPS), kèm trình chiếu toàn màn hình & xuất `.html`.
+
+## Cấu hình bán hàng & liên hệ (Monetization)
+
+- Toàn bộ thông tin thương hiệu, SĐT/Zalo, Email, bảng giá tham chiếu và mẫu tin nhắn đặt hàng nằm tập trung trong `monetization-config.js` (`window.CONFIG_MONETIZATION`).
+- Trước khi đẩy bản live lên GitHub/Vercel, hãy thay các chuỗi placeholder `__...__` trong `monetization-config.js` bằng thông tin thật của bạn.
+- Ảnh chia sẻ MXH (`og-cover.png`, 1200×630) và thẻ Open Graph / Twitter Card đã được cấu hình sẵn trong `index.html` trỏ về `https://lop-nhe.vercel.app`.
