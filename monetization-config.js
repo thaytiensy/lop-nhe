@@ -1,26 +1,26 @@
 /* ==========================================================================
    CẤU HÌNH BÁN HÀNG, GÓI NÂNG CẤP & LIÊN HỆ — TRỢ LÝ GVCN
    ==========================================================================
-   Chủ sở hữu chỉ cần chỉnh các biến trong CONFIG_MONETIZATION dưới đây
-   trước khi đẩy lên GitHub/Vercel. Mọi bảng giá, nút Zalo, Email và mẫu
-   tin nhắn đặt hàng trong ứng dụng sẽ tự động cập nhật theo file này.
+   Mọi thông tin liên hệ, bảng giá ưu đãi và mẫu tin nhắn trong ứng dụng
+   được quản lý tập trung tại window.CONFIG_MONETIZATION.
    ========================================================================== */
 
 window.CONFIG_MONETIZATION = {
-  // 1. THÔNG TIN THƯƠNG HIỆU & LIÊN HỆ
-  // Thay các chuỗi "__...__" bằng thông tin thật trước khi đẩy live:
+  // 1. THÔNG TIN LIÊN HỆ CHÍNH THỨC
   brandName: "Trợ lý GVCN",
-  authorLabel: "__TEN_TAC_GIA_HOAC_DON_VI__",      // VD: "Thầy Tiến Sỹ · EduTech VN"
+  authorLabel: "Liên hệ Admin",
   liveUrl: "https://lop-nhe.vercel.app",
-  zaloPhone: "__DIEN_SDT_ZALO_CUA_BAN__",          // VD: "09xx xxx xxx"
-  zaloUrl: "__DIEN_LINK_ZALO_ME__",                // VD: "https://zalo.me/09xxxxxxxx"
-  facebookUrl: "__DIEN_LINK_FACEBOOK_HOAC_PAGE__", // VD: "https://m.me/yourpage" (hoặc để "")
-  email: "__DIEN_EMAIL_LIEN_HE__",                 // VD: "lienhe@tenmien.vn"
+  zaloPhone: "0353205414",
+  zaloUrl: "https://zalo.me/0353205414",
+  facebookUrl: "",
+  email: "chuotbachchiase@gmail.com",
   supportHours: "8:00 – 21:00 (Thứ 2 – Chủ nhật)",
-  paymentNote: "__DIEN_THONG_TIN_CHUYEN_KHOAN_HOAC_DE_TRONG__",
+  paymentNote:
+    "Nhắn Zalo 0353205414 hoặc gửi Email chuotbachchiase@gmail.com để kích hoạt nhanh trong 5 phút",
 
   // 2. NỘI DUNG CHIA SẺ NHANH LÊN FACEBOOK / ZALO
-  shareTitle: "Trợ lý GVCN — Quản lý lớp học, Sổ điểm TT27, Giáo án 2345 & Bộ Office miễn phí",
+  shareTitle:
+    "Trợ lý GVCN — Quản lý lớp học, Sổ điểm TT27, Giáo án 2345 & Bộ Office miễn phí",
   shareText:
     "Chia sẻ cho thầy cô công cụ Trợ lý GVCN dùng miễn phí ngay trên trình duyệt (không cần cài đặt, không cần đăng nhập):\n" +
     "✓ Điểm danh, lưu SĐT & nhắn nhanh Zalo phụ huynh\n" +
@@ -29,17 +29,20 @@ window.CONFIG_MONETIZATION = {
     "✓ Tích hợp sẵn Word, Excel, PowerPoint 3-in-1\n" +
     "Dùng thử ngay tại: https://lop-nhe.vercel.app",
 
-  // 3. BẢNG GÓI DỊCH VỤ (Giá tham chiếu — sửa dễ dàng tại đây)
+  // 3. BẢNG GÓI DỊCH VỤ (ƯU ĐÃI MỞ BÁN)
   pricingDisclaimer:
-    "Mức giá hiển thị là giá tham chiếu dự kiến — có thể điều chỉnh linh hoạt theo quy mô lớp, tổ khối hoặc yêu cầu riêng.",
+    "Ưu đãi mở bán áp dụng trực tiếp khi đăng ký qua Zalo 0353205414 hoặc Email chuotbachchiase@gmail.com.",
   plans: [
     {
       id: "free",
       badge: "Đang sử dụng",
-      name: "Bản Miễn phí",
-      subtitle: "Dành cho GVCN cá nhân dùng hàng ngày",
+      name: "Bản Cơ bản",
+      subtitle: "Mở miễn phí toàn bộ tính năng cốt lõi trên web",
       price: "0đ",
       period: "/ mãi mãi",
+      originalPrice: "",
+      promoTag: "",
+      priceHint: "Dùng ngay không cần đăng nhập",
       featured: false,
       ctaLabel: "Tiếp tục dùng miễn phí",
       ctaAction: "close",
@@ -54,17 +57,20 @@ window.CONFIG_MONETIZATION = {
     },
     {
       id: "pro-gvcn",
-      badge: "Phổ biến nhất",
+      badge: "Ưu đãi mở bán",
       name: "Gói Pro GVCN",
       subtitle: "Tiết kiệm tối đa thời gian suốt năm học",
-      price: "199.000đ",
-      period: "/ năm học (tham chiếu)",
+      price: "149.000đ",
+      period: "/ năm học",
+      originalPrice: "299.000đ",
+      promoTag: "Giảm 50%",
+      priceHint: "Chỉ ~12.000đ/tháng",
       featured: true,
-      ctaLabel: "Đăng ký Gói Pro",
+      ctaLabel: "Đăng ký Gói Pro — 149.000đ",
       ctaAction: "select",
-      serviceValue: "Gói Pro GVCN (Cá nhân)",
+      serviceValue: "Gói Pro GVCN (149.000đ/năm học)",
       features: [
-        "Toàn bộ tính năng của Bản Miễn phí",
+        "Toàn bộ tính năng của Bản Cơ bản miễn phí",
         "Đồng bộ đám mây giữa Máy tính & Điện thoại",
         "Kho 50+ mẫu Giáo án, Biên bản họp PH, Thư khen chuẩn",
         "Xuất tài liệu sạch, hỗ trợ in ấn & báo cáo cuối kì nhanh",
@@ -74,15 +80,18 @@ window.CONFIG_MONETIZATION = {
     },
     {
       id: "custom-school",
-      badge: "Theo yêu cầu",
+      badge: "Ưu đãi mở bán",
       name: "Thiết kế riêng Trường & App",
-      subtitle: "Cho Trường học, Tổ khối hoặc đặt làm App giáo dục",
-      price: "Từ 2.500.000đ",
-      period: "/ gói (tham chiếu)",
+      subtitle: "Cho Trường học, Tổ khối hoặc đặt làm App theo yêu cầu",
+      price: "Từ 1.990.000đ",
+      period: "/ gói",
+      originalPrice: "2.500.000đ",
+      promoTag: "Ưu đãi Trường",
+      priceHint: "Bàn giao trọn gói & hỗ trợ kỹ thuật",
       featured: false,
       ctaLabel: "Nhận báo giá thiết kế riêng",
       ctaAction: "select",
-      serviceValue: "Thiết kế riêng theo Trường / Khối",
+      serviceValue: "Thiết kế riêng Trường & App (Từ 1.990.000đ/gói)",
       features: [
         "Gắn Logo, tên Trường & tên miền riêng chuyên nghiệp",
         "Quản trị đa lớp, đa khối, tổng hợp báo cáo cho BGH",
@@ -98,7 +107,7 @@ window.CONFIG_MONETIZATION = {
   comparison: [
     {
       feature: "Điểm danh, Sổ điểm TT27, Giáo án 2345, Office 3-in-1",
-      free: "Đầy đủ",
+      free: "Miễn phí 100%",
       pro: "Đầy đủ + Mẫu nâng cao",
       custom: "Tùy chỉnh theo trường"
     },
@@ -121,17 +130,17 @@ window.CONFIG_MONETIZATION = {
       custom: "Toàn trường & BGH"
     },
     {
-      feature: "Hỗ trợ kỹ thuật & Chỉnh sửa tính năng",
+      feature: "Hỗ trợ kỹ thuật & Kích hoạt",
       free: "Hướng dẫn nhanh",
-      pro: "Hỗ trợ 1-1 qua Zalo",
+      pro: "Hỗ trợ 1-1 qua Zalo 0353205414",
       custom: "Hỗ trợ ưu tiên & bảo trì riêng"
     }
   ],
 
   // 5. DANH SÁCH NHU CẦU TRONG FORM LIÊN HỆ
   services: [
-    "Gói Pro GVCN (Cá nhân)",
-    "Thiết kế riêng theo Trường / Khối",
+    "Gói Pro GVCN (149.000đ/năm học)",
+    "Thiết kế riêng Trường & App (Từ 1.990.000đ/gói)",
     "Đặt làm Web App Giáo dục / Công cụ riêng",
     "Hợp tác giới thiệu / Cộng tác viên"
   ]

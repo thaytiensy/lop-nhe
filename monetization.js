@@ -78,7 +78,6 @@
     });
 
     reopenBtn?.addEventListener("click", () => {
-      // Đưa về tab Tổng quan nếu đang ở tab khác
       const dashNav = document.querySelector('.nav-item[data-view="dashboard"]');
       if (dashNav && !dashNav.classList.contains("active")) dashNav.click();
       setHidden(false);
@@ -131,16 +130,28 @@
           : plan.ctaAction === "close"
           ? "btn btn-soft plan-cta"
           : "btn btn-amber plan-cta";
+        const oldPriceHtml = plan.originalPrice
+          ? `<div class="plan-old-row"><del class="plan-old-price">${esc(plan.originalPrice)}</del>${
+              plan.promoTag ? `<span class="plan-promo-tag">${esc(plan.promoTag)}</span>` : ""
+            }</div>`
+          : "";
+        const hintHtml = plan.priceHint
+          ? `<div class="plan-price-hint">${esc(plan.priceHint)}</div>`
+          : "";
         return `
           <article class="${cls}">
             <div class="plan-top">
-              <span class="plan-badge ${plan.featured ? "is-hot" : ""}">${esc(plan.badge)}</span>
+              <span class="plan-badge ${plan.featured ? "is-hot" : plan.originalPrice ? "is-promo" : ""}">${esc(plan.badge)}</span>
               <h3>${esc(plan.name)}</h3>
               <p class="plan-sub">${esc(plan.subtitle)}</p>
             </div>
-            <div class="plan-price">
-              <strong>${esc(plan.price)}</strong>
-              <span>${esc(plan.period)}</span>
+            <div class="plan-price-box">
+              ${oldPriceHtml}
+              <div class="plan-price">
+                <strong>${esc(plan.price)}</strong>
+                <span>${esc(plan.period)}</span>
+              </div>
+              ${hintHtml}
             </div>
             <ul class="plan-features">
               ${plan.features.map((f) => `<li><span class="pf-check">✓</span><span>${esc(f)}</span></li>`).join("")}
@@ -183,30 +194,34 @@
 
     const parts = [];
     if (!helper.isPlaceholder(cfg.authorLabel)) {
-      parts.push(`<span class="contact-chip">👤 ${esc(cfg.authorLabel)}</span>`);
+      parts.push(`<span class="contact-chip">👤 <strong>${esc(cfg.authorLabel)}</strong></span>`);
     }
     if (helper.hasLivePhone()) {
-      parts.push(`<span class="contact-chip">📞 Zalo / SĐT: <strong>${esc(cfg.zaloPhone)}</strong></span>`);
+      const phoneHtml = helper.hasLiveZalo()
+        ? `<a class="contact-link" href="${esc(cfg.zaloUrl.trim())}" target="_blank" rel="noopener noreferrer">${esc(cfg.zaloPhone)}</a>`
+        : `<strong>${esc(cfg.zaloPhone)}</strong>`;
+      parts.push(`<span class="contact-chip">📞 Zalo / SĐT: ${phoneHtml}</span>`);
     }
     if (helper.hasLiveEmail()) {
-      parts.push(`<span class="contact-chip">✉ ${esc(cfg.email)}</span>`);
+      parts.push(
+        `<span class="contact-chip">✉ <a class="contact-link" href="mailto:${esc(cfg.email.trim())}">${esc(cfg.email)}</a></span>`
+      );
+    }
+    if (helper.hasLiveFacebook()) {
+      parts.push(
+        `<span class="contact-chip">💬 <a class="contact-link" href="${esc(cfg.facebookUrl.trim())}" target="_blank" rel="noopener noreferrer">Facebook</a></span>`
+      );
     }
     if (cfg.supportHours) {
       parts.push(`<span class="contact-chip">🕒 ${esc(cfg.supportHours)}</span>`);
     }
 
-    if (helper.hasLiveZalo() || helper.hasLivePhone() || helper.hasLiveEmail()) {
-      box.className = "contact-status-bar is-live";
-      box.innerHTML =
-        `<div class="contact-chips">${parts.join("")}</div>` +
-        (helper.hasLivePayment()
-          ? `<div class="contact-pay-note">💳 ${esc(cfg.paymentNote)}</div>`
-          : "");
-    } else {
-      box.className = "contact-status-bar is-pending";
-      box.innerHTML =
-        "<strong>Kênh liên hệ trực tiếp đang sẵn sàng cấu hình:</strong> Thầy/cô vẫn có thể điền nhu cầu &amp; bấm <strong>Sao chép yêu cầu</strong> ngay bên dưới. (Quản trị viên cập nhật SĐT/Zalo thật tại tệp <code>monetization-config.js</code>).";
-    }
+    box.className = "contact-status-bar is-live";
+    box.innerHTML =
+      `<div class="contact-chips">${parts.join("")}</div>` +
+      (helper.hasLivePayment()
+        ? `<div class="contact-pay-note">⚡ ${esc(cfg.paymentNote)}</div>`
+        : "");
   }
 
   function populateServices() {
@@ -275,7 +290,6 @@
     updateInquiryPreview();
     modal.hidden = false;
     document.body.classList.add("modal-open");
-    // Đóng sidebar mobile nếu đang mở
     $("#sidebar")?.classList.remove("open");
     const sbBackdrop = $("#sidebarBackdrop");
     if (sbBackdrop) sbBackdrop.hidden = true;
@@ -299,13 +313,24 @@
     populateServices();
     updateInquiryPreview();
 
+    // Cập nhật nhãn nút Zalo / Email hiển thị rõ số & email thật
+    const btnZalo = $("#btnSendZalo");
+    if (btnZalo && helper.hasLivePhone()) {
+      btnZalo.textContent = `💬 Nhắn Zalo ${cfg.zaloPhone}`;
+      if (helper.hasLiveZalo()) btnZalo.dataset.href = cfg.zaloUrl.trim();
+    }
+    const btnEmail = $("#btnSendEmail");
+    if (btnEmail && helper.hasLiveEmail()) {
+      btnEmail.title = `Gửi yêu cầu tới ${cfg.email}`;
+    }
+
     // Nút mở modal không gây phiền
     ["#btnTopbarPro", "#btnSidebarPro", "#btnDashboardPro", "#brandProBadge"].forEach((sel) => {
       $(sel)?.addEventListener("click", () => openProModal());
     });
 
     $("#btnDashboardCustomApp")?.addEventListener("click", () => {
-      openProModal("Đặt làm Web App Giáo dục / Công cụ riêng");
+      openProModal("Thiết kế riêng Trường & App (Từ 1.990.000đ/gói)");
       setTimeout(() => {
         $("#proInquirySection")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 60);
@@ -326,7 +351,7 @@
       if (!btn) return;
       if (btn.dataset.planAction === "close") {
         closeProModal();
-        showToast("Thầy/cô đang sử dụng đầy đủ tính năng lõi của Bản Miễn phí!");
+        showToast("Thầy/cô đang sử dụng đầy đủ tính năng lõi của Bản Cơ bản miễn phí!");
         return;
       }
       if (btn.dataset.planService && $("#inqService")) {
@@ -352,42 +377,36 @@
       const ok = await copyText(msg);
       showToast(
         ok
-          ? "Đã sao chép nội dung yêu cầu — thầy/cô dán trực tiếp vào Zalo/Tin nhắn nhé!"
+          ? `Đã sao chép nội dung yêu cầu — dán gửi Zalo ${cfg.zaloPhone} ngay nhé!`
           : "Không thể tự động sao chép, vui lòng bôi đen ô nội dung bên trên."
       );
     });
 
     // Mở Zalo tư vấn
-    $("#btnSendZalo")?.addEventListener("click", async () => {
+    btnZalo?.addEventListener("click", async () => {
       const msg = buildInquiryMessage();
       await copyText(msg);
       if (helper.hasLiveZalo()) {
         window.open(cfg.zaloUrl.trim(), "_blank", "noopener,noreferrer");
-        showToast("Đã sao chép yêu cầu & mở Zalo — chỉ cần dán (Ctrl+V) và gửi!");
+        showToast(`Đã sao chép yêu cầu & mở Zalo ${cfg.zaloPhone} — chỉ cần dán (Ctrl+V) và gửi!`);
       } else {
-        showToast("Đã sao chép nội dung yêu cầu! (Chủ app hãy điền zaloUrl thật trong monetization-config.js)");
+        showToast("Đã sao chép nội dung yêu cầu!");
       }
     });
 
     // Mở Email tư vấn
-    const btnEmail = $("#btnSendEmail");
-    if (btnEmail) {
-      if (!helper.hasLiveEmail()) {
-        btnEmail.title = "Điền email thật trong monetization-config.js để kích hoạt gửi trực tiếp";
+    btnEmail?.addEventListener("click", async () => {
+      const msg = buildInquiryMessage();
+      await copyText(msg);
+      if (helper.hasLiveEmail()) {
+        const subject = encodeURIComponent(`[Trợ lý GVCN] Yêu cầu tư vấn: ${$("#inqService")?.value || ""}`);
+        const body = encodeURIComponent(msg);
+        window.location.href = `mailto:${cfg.email.trim()}?subject=${subject}&body=${body}`;
+        showToast(`Đang mở Email tới ${cfg.email} (nội dung đã được sao chép sẵn)`);
+      } else {
+        showToast("Đã sao chép nội dung yêu cầu!");
       }
-      btnEmail.addEventListener("click", async () => {
-        const msg = buildInquiryMessage();
-        await copyText(msg);
-        if (helper.hasLiveEmail()) {
-          const subject = encodeURIComponent(`[Trợ lý GVCN] Yêu cầu tư vấn: ${$("#inqService")?.value || ""}`);
-          const body = encodeURIComponent(msg);
-          window.location.href = `mailto:${cfg.email.trim()}?subject=${subject}&body=${body}`;
-          showToast("Đang mở ứng dụng Email (nội dung cũng đã được sao chép sẵn)");
-        } else {
-          showToast("Đã sao chép yêu cầu! (Chủ app hãy điền email thật trong monetization-config.js)");
-        }
-      });
-    }
+    });
   }
 
   initOnboarding();

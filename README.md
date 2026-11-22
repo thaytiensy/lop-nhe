@@ -17,6 +17,6 @@
 
 ## Cấu hình bán hàng & liên hệ (Monetization)
 
-- Toàn bộ thông tin thương hiệu, SĐT/Zalo, Email, bảng giá tham chiếu và mẫu tin nhắn đặt hàng nằm tập trung trong `monetization-config.js` (`window.CONFIG_MONETIZATION`).
-- Trước khi đẩy bản live lên GitHub/Vercel, hãy thay các chuỗi placeholder `__...__` trong `monetization-config.js` bằng thông tin thật của bạn.
-- Ảnh chia sẻ MXH (`og-cover.png`, 1200×630) và thẻ Open Graph / Twitter Card đã được cấu hình sẵn trong `index.html` trỏ về `https://lop-nhe.vercel.app`.
+- Toàn bộ thông tin liên hệ chính thức (**Liên hệ Admin** · Zalo `0353205414` / `https://zalo.me/0353205414` · Email `chuotbachchiase@gmail.com`) và bảng giá ưu đãi mở bán được cấu hình tập trung trong `monetization-config.js` (`window.CONFIG_MONETIZATION`).
+- Bảng giá mở bán hiện hành: **Bản Cơ bản `0đ`** (miễn phí tính năng lõi) · **Gói Pro GVCN `149.000đ/năm học`** (giá gốc `299.000đ`, `~12.000đ/tháng`) · **Thiết kế riêng Trường & App `Từ 1.990.000đ/gói`** (giá gốc `2.500.000đ`).
+- Ảnh chia sẻ MXH (`og-cover.png`, 1200×630) và thẻ Open Graph / Twitter Card trong `index.html` trỏ trực tiếp về `https://lop-nhe.vercel.app`.
