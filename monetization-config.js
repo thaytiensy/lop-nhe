@@ -13,10 +13,10 @@ window.CONFIG_MONETIZATION = {
   zaloPhone: "0353205414",
   zaloUrl: "https://zalo.me/0353205414",
   facebookUrl: "",
-  email: "chuotbachchiase@gmail.com",
+  email: "thaytiensy@gmail.com",
   supportHours: "8:00 – 21:00 (Thứ 2 – Chủ nhật)",
   paymentNote:
-    "Nhắn Zalo 0353205414 hoặc gửi Email chuotbachchiase@gmail.com để kích hoạt nhanh trong 5 phút",
+    "Nhắn Zalo 0353205414 hoặc gửi Email thaytiensy@gmail.com để kích hoạt nhanh trong 5 phút",
 
   // 2. NỘI DUNG CHIA SẺ NHANH LÊN FACEBOOK / ZALO
   shareTitle:
@@ -31,7 +31,7 @@ window.CONFIG_MONETIZATION = {
 
   // 3. BẢNG GÓI DỊCH VỤ (ƯU ĐÃI MỞ BÁN)
   pricingDisclaimer:
-    "Ưu đãi mở bán áp dụng trực tiếp khi đăng ký qua Zalo 0353205414 hoặc Email chuotbachchiase@gmail.com.",
+    "Ưu đãi mở bán áp dụng trực tiếp khi đăng ký qua Zalo 0353205414 hoặc Email thaytiensy@gmail.com.",
   plans: [
     {
       id: "free",
