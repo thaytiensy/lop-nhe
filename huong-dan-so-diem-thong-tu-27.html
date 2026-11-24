@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hướng Dẫn Quản Lý Lớp &amp; Sổ Điểm Thông Tư 27 Tự Động Hóa 100% | Trợ lý GVCN</title>
+  <meta name="description" content="Hướng dẫn chi tiết quản lý lớp học tiểu học và lập sổ điểm Thông tư 27 tự động hóa 100%: Phân loại T/H/C chuẩn xác, nhắn tin Zalo phụ huynh 1 chạm và soạn giáo án CV 2345 miễn phí." />
+  <meta name="keywords" content="sổ điểm thông tư 27 excel miễn phí, quản lý lớp học tiểu học, trợ lý gvcn, đánh giá học sinh tiểu học, soạn giáo án cv 2345, nhắn zalo phụ huynh" />
+  <meta name="author" content="Trợ lý GVCN" />
+  <link rel="canonical" href="https://lop-nhe.vercel.app/huong-dan-so-diem-thong-tu-27" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-light: #f0fdfa;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding-bottom: 60px;
+    }
+    header.site-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 20px;
+    }
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+    .brand svg { width: 28px; height: 28px; fill: var(--primary); }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: var(--bg); border-color: #cbd5e1; }
+    .btn-zalo {
+      background: #0068ff;
+      color: #ffffff;
+    }
+    .btn-zalo:hover { background: #0056d6; }
+    main.article-container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .article-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 2rem;
+      line-height: 1.35;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 16px;
+    }
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .lead-box {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 0 10px 10px 0;
+      font-size: 1.05rem;
+      margin-bottom: 32px;
+      color: #134e4a;
+    }
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 32px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+    h3 {
+      font-size: 1.12rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 20px 0 10px 0;
+    }
+    p { margin-bottom: 16px; font-size: 1rem; color: #334155; }
+    ul, ol { margin: 12px 0 20px 24px; color: #334155; }
+    li { margin-bottom: 8px; }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .feature-card h4 {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .feature-card p { font-size: 0.92rem; margin-bottom: 0; }
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .step-num {
+      background: var(--primary);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .cta-banner {
+      background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 32px;
+      text-align: center;
+      margin: 40px 0 20px 0;
+    }
+    .cta-banner h3 { color: #ffffff; font-size: 1.5rem; margin-bottom: 12px; }
+    .cta-banner p { color: #ccfbf1; font-size: 1rem; margin-bottom: 24px; }
+    .cta-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cta-btn-white {
+      background: #ffffff;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .cta-btn-white:hover { background: #f0fdfa; }
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      background: #ffffff;
+    }
+    .faq-q { font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .faq-a { color: #475569; font-size: 0.95rem; margin-bottom: 0; }
+    footer.site-footer {
+      max-width: 900px;
+      margin: 40px auto 0 auto;
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      padding: 0 20px;
+    }
+    @media (max-width: 640px) {
+      .article-card { padding: 24px 18px; }
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.25rem; }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Hướng Dẫn Quản Lý Lớp & Lập Sổ Điểm Thông Tư 27 Tự Động Hóa 100% Cho Giáo Viên Tiểu Học",
+    "description": "Hướng dẫn sử dụng công cụ Trợ lý GVCN miễn phí trên trình duyệt để điểm danh, lập sổ điểm TT27 tự xếp T/H/C và gửi thông báo phụ huynh.",
+    "url": "https://lop-nhe.vercel.app/huong-dan-so-diem-thong-tu-27",
+    "datePublished": "2026-11-24",
+    "dateModified": "2026-11-24",
+    "author": {
+      "@type": "Organization",
+      "name": "Trợ lý GVCN"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Sổ điểm Thông tư 27 trên Trợ lý GVCN phân loại mức đạt như thế nào?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hệ thống tự động xếp loại chuẩn theo quy định: Điểm từ 9.0 - 10.0 xếp loại T (Hoàn thành tốt), 5.0 - 8.9 xếp loại H (Hoàn thành), dưới 5.0 xếp loại C (Chưa hoàn thành)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Tôi có cần cài đặt phần mềm hay tạo tài khoản không?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Không cần. Trợ lý GVCN chạy trực tiếp trên trình duyệt máy tính và điện thoại, không cần cài đặt và mở miễn phí 100%."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="brand">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+        <span>Trợ lý GVCN</span>
+      </a>
+      <div class="nav-actions">
+        <a href="/" class="btn btn-primary">Mở Ứng Dụng</a>
+        <a href="https://zalo.me/0353205414" target="_blank" rel="noopener" class="btn btn-zalo">Zalo Hỗ Trợ</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="article-container">
+    <article class="article-card">
+      <span class="badge">Cẩm Nang Giáo Viên Tiểu Học</span>
+      <h1>Hướng Dẫn Quản Lý Lớp &amp; Lập Sổ Điểm Thông Tư 27 Tự Động Hóa 100% Cho Giáo Viên Tiểu Học</h1>
+      <div class="meta-bar">
+        <span>Cập nhật: 24/11/2026</span>
+        <span>•</span>
+        <span>Thời gian đọc: 4 phút</span>
+        <span>•</span>
+        <span>Tác giả: Ban Chuyên Môn Trợ Lý GVCN</span>
+      </div>
+
+      <div class="lead-box">
+        <strong>Tóm tắt:</strong> Đánh giá học sinh tiểu học theo Thông tư 27 không còn là nỗi ám ảnh sổ sách mỗi kỳ giữa kỳ và cuối kỳ. Ứng dụng <strong>Trợ lý GVCN</strong> giúp thầy cô tự động hóa khâu phân loại T/H/C, quản lý chuyên cần và soạn bài giảng trực tiếp trên trình duyệt hoàn toàn miễn phí.
+      </div>
+
+      <h2>1. Những áp lực sổ sách phổ biến của GVCN mỗi kỳ đánh giá</h2>
+      <p>Mỗi kỳ giữa học kỳ và tổng kết năm học, giáo viên chủ nhiệm tiểu học thường phải đối mặt với khối lượng sổ sách và báo cáo khổng lồ:</p>
+      <ul>
+        <li><strong>Mất hàng giờ dò tiêu chí T/H/C Thông tư 27 thủ công:</strong> Phải đối chiếu điểm kiểm tra định kỳ của từng môn học với các tiêu chí Hoàn thành tốt (T), Hoàn thành (H), Chưa hoàn thành (C).</li>
+        <li><strong>Rủi ro sai lệch công thức khi chỉnh sửa file Excel:</strong> Chỉ cần một thao tác kéo nhầm ô hoặc xóa cột vô tình có thể làm sai kết quả toàn bộ danh sách lớp 30 - 45 học sinh.</li>
+        <li><strong>Khó khăn khi gửi thông báo tới từng phụ huynh:</strong> Sao chép tin nhắn thủ công trên Zalo vừa mất thời gian, vừa dễ nhầm lẫn thông tin của các em.</li>
+      </ul>
+
+      <h2>2. Giải pháp công nghệ 0đ: Ứng dụng Trợ lý GVCN trên trình duyệt</h2>
+      <p>Nhằm giảm tải tối đa áp lực hành chính cho các thầy cô, ứng dụng <strong>Trợ lý GVCN</strong> được thiết kế theo triết lý "Gọn nhẹ - An toàn - Dùng ngay":</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Sổ điểm Thông tư 27 tự động</h4>
+          <p>Nhập điểm số 0 - 10, hệ thống tự động phân loại chuẩn T, H, C theo Thông tư 27/2020/TT-BGDĐT ngay lập tức, có sẵn thống kê tỷ lệ % từng mức.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Điểm danh &amp; Zalo 1 chạm</h4>
+          <p>Điểm danh hiện diện, phép, không phép theo ngày. Tích hợp nút mở Zalo gửi tin nhắn riêng cho từng phụ huynh chỉ với một lần nhấn.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Bộ Office 3-in-1 tích hợp</h4>
+          <p>Mở, chỉnh sửa và xuất file Word (.docx), bảng tính Excel (.xlsx) và bài trình chiếu PowerPoint (.pptx) trực tiếp ngay trên trình duyệt mà không cần cài Office.</p>
+        </div>
+      </div>
+
+      <h2>3. Hướng dẫn 3 bước sử dụng ngay không cần đăng nhập</h2>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div>
+            <strong>Truy cập ứng dụng:</strong> Mở đường dẫn <a href="/" style="color:var(--primary);font-weight:600;">https://lop-nhe.vercel.app/</a> trên bất kỳ máy tính bảng, điện thoại hoặc máy tính nào. Không yêu cầu đăng ký hay đăng nhập.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div>
+            <strong>Nhập danh sách lớp:</strong> Thêm nhanh danh sách học sinh hoặc nhập danh sách học sinh từ file Excel có sẵn chỉ trong 10 giây.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div>
+            <strong>Vào điểm &amp; Xuất báo cáo:</strong> Chọn môn học, nhập điểm kiểm tra định kỳ. Sổ điểm tự tính toán và cho phép in ấn hoặc xuất tệp sao lưu an toàn về máy.
+          </div>
+        </div>
+      </div>
+
+      <h2>4. Gói Pro GVCN: Đồng bộ máy tính &amp; điện thoại tiện lợi</h2>
+      <p>Đối với thầy cô có nhu cầu đồng bộ dữ liệu hai chiều giữa máy tính giảng dạy trên lớp và điện thoại cá nhân tại nhà, gói <strong>Pro GVCN</strong> với mức phí hỗ trợ chỉ <strong>149.000đ/năm học</strong> (~12.000đ/tháng) cung cấp:</p>
+      <ul>
+        <li>Sao lưu đám mây tự động đa thiết bị.</li>
+        <li>Tùy biến biểu mẫu nhận xét học sinh theo mẫu riêng của từng trường.</li>
+        <li>Kênh hỗ trợ kỹ thuật ưu tiên 1-1 qua Zalo từ đội ngũ kỹ sư.</li>
+      </ul>
+
+      <h2>5. Câu hỏi thường gặp (FAQ)</h2>
+      <div class="faq-item">
+        <div class="faq-q">Q: Dữ liệu học sinh có bị lộ ra ngoài không?</div>
+        <div class="faq-a">A: Tuyệt đối không. Bản miễn phí lưu trữ 100% dữ liệu cục bộ trong bộ nhớ an toàn của chính trình duyệt thiết bị thầy cô đang dùng. Không có máy chủ trung gian nào thu thập dữ liệu học sinh.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q: Ứng dụng có thể dùng khi mất mạng Internet không?</div>
+        <div class="faq-a">A: Hoàn toàn được. Sau khi tải trang lần đầu, toàn bộ các tính năng điểm danh, chấm điểm TT27 và bộ Office hoạt động độc lập ngay cả khi không có kết nối Internet.</div>
+      </div>
+
+      <div class="cta-banner">
+        <h3>Bắt đầu tối ưu sổ sách lớp học ngay hôm nay</h3>
+        <p>Miễn phí 100% cho giáo viên cá nhân • Không cần cài đặt • Mở trên mọi thiết bị</p>
+        <div class="cta-buttons">
+          <a href="/" class="btn cta-btn-white">Vào Ứng Dụng Miễn Phí</a>
+          <a href="https://zalo.me/0353205414" target="_blank" rel="noopener" class="btn btn-zalo">Liên Hệ Zalo: 0353205414</a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Trợ lý GVCN — Công cụ hỗ trợ Giáo viên chủ nhiệm &amp; Quản trị trường học gọn nhẹ.</p>
+    <p>Hotline/Zalo: 0353205414 • Email: thaytiensy@gmail.com</p>
+  </footer>
+</body>
+</html>

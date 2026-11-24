@@ -46,8 +46,27 @@
     setTimeout(() => el.remove(), 2700);
   }
 
+  const QUOTA_ERR_MSG = "Bộ nhớ trình duyệt đã đầy. Vui lòng xuất tệp Sao lưu (JSON) về máy hoặc xóa bớt tệp Office cũ.";
+  let lastQuotaToastAt = 0;
+
+  function isQuotaError(err) {
+    if (!err) return false;
+    return err.name === "QuotaExceededError" || err.name === "NS_ERROR_DOM_QUOTA_REACHED" || err.code === 22 || err.code === 1014;
+  }
+
   function save() {
-    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      return true;
+    } catch (err) {
+      console.error("app.save() localStorage error:", err);
+      const now = Date.now();
+      if (now - lastQuotaToastAt > 2500) {
+        lastQuotaToastAt = now;
+        toast(isQuotaError(err) ? QUOTA_ERR_MSG : "Không thể lưu dữ liệu vào trình duyệt. Vui lòng xuất tệp Sao lưu (JSON).");
+      }
+      return false;
+    }
   }
 
   function createSampleClass() {
@@ -613,31 +632,46 @@
       renderAll();
     });
 
-    const addNewClass = () => {
-      const name = prompt("Nhập tên lớp mới (VD: 4B, 5A):");
-      if (!name || !name.trim()) return;
-      const room = prompt("Phòng học (có thể bỏ trống):", "") || "";
+    const addNewClass = async () => {
+      const res = await window.AppDialog.form({
+        title: "Tạo lớp học mới",
+        message: "Nhập tên lớp và phòng học để quản lý độc lập điểm danh, sổ điểm và giáo án.",
+        fields: [
+          { name: "name", label: "Tên lớp *", placeholder: "VD: 4B, 5A", required: true, maxLength: 40 },
+          { name: "room", label: "Phòng học (có thể bỏ trống)", placeholder: "VD: Phòng 205", required: false, maxLength: 60 }
+        ],
+        confirmText: "Tạo lớp"
+      });
+      if (!res || !res.name) return;
       const id = `c${Date.now()}`;
-      state.classes[id] = { id, name: name.trim(), room: room.trim(), students: [], attendance: {}, grades: [] };
+      state.classes[id] = { id, name: res.name, room: res.room || "", students: [], attendance: {}, grades: [] };
       state.activeClassId = id;
       save();
       renderAll();
-      toast(`Đã tạo lớp ${name.trim()}`);
+      toast(`Đã tạo lớp ${res.name}`);
     };
     $("#btnAddClassQuick").addEventListener("click", addNewClass);
     $("#btnAddClassInProfile").addEventListener("click", addNewClass);
     $("#btnManageClassQuick").addEventListener("click", () => showView("profile"));
 
-    $("#classManagerList").addEventListener("click", (e) => {
+    $("#classManagerList").addEventListener("click", async (e) => {
       const sel = e.target.closest("[data-sel-cls]");
       if (sel) { state.activeClassId = sel.dataset.selCls; save(); renderAll(); return; }
       const ren = e.target.closest("[data-ren-cls]");
       if (ren) {
         const c = state.classes[ren.dataset.renCls];
-        const newName = prompt("Đổi tên lớp:", c.name);
-        if (newName && newName.trim()) {
-          c.name = newName.trim();
-          c.room = prompt("Phòng học:", c.room || "") ?? c.room;
+        if (!c) return;
+        const res = await window.AppDialog.form({
+          title: "Chỉnh sửa thông tin lớp",
+          fields: [
+            { name: "name", label: "Tên lớp *", defaultValue: c.name, required: true, maxLength: 40 },
+            { name: "room", label: "Phòng học", defaultValue: c.room || "", required: false, maxLength: 60 }
+          ],
+          confirmText: "Lưu thay đổi"
+        });
+        if (res && res.name) {
+          c.name = res.name;
+          c.room = res.room || "";
           save();
           renderAll();
           toast(`Đã cập nhật lớp ${c.name}`);
@@ -648,7 +682,14 @@
       if (del) {
         if (Object.keys(state.classes).length <= 1) return toast("Cần giữ ít nhất 1 lớp học");
         const c = state.classes[del.dataset.delCls];
-        if (!confirm(`Xóa lớp ${c.name} cùng dữ liệu của lớp này?`)) return;
+        if (!c) return;
+        const ok = await window.AppDialog.confirm({
+          title: "Xóa lớp học",
+          message: `Xóa lớp ${c.name} cùng toàn bộ dữ liệu điểm danh và sổ điểm của lớp này? Thao tác không thể hoàn tác.`,
+          confirmText: "Xóa lớp",
+          danger: true
+        });
+        if (!ok) return;
         delete state.classes[c.id];
         if (state.activeClassId === c.id) state.activeClassId = Object.keys(state.classes)[0];
         save();
@@ -898,16 +939,24 @@
     });
 
     // Grades TT27
-    $("#btnAddSubject").addEventListener("click", () => {
-      const subj = prompt("Nhập tên môn học / hoạt động mới:");
+    $("#btnAddSubject").addEventListener("click", async () => {
+      const subj = await window.AppDialog.prompt({
+        title: "Thêm môn học / hoạt động mới",
+        label: "Tên môn học hoặc hoạt động *",
+        placeholder: "VD: Tin học, Hoạt động trải nghiệm",
+        required: true,
+        maxLength: 60,
+        confirmText: "Thêm môn"
+      });
       if (!subj || !subj.trim()) return;
-      if (!state.subjects.includes(subj.trim())) {
-        state.subjects.push(subj.trim());
+      const clean = subj.trim();
+      if (!state.subjects.includes(clean)) {
+        state.subjects.push(clean);
         save();
         renderSubjectSelect();
       }
-      $("#gradeSubject").value = subj.trim();
-      toast(`Đã thêm môn "${subj.trim()}"`);
+      $("#gradeSubject").value = clean;
+      toast(`Đã thêm môn "${clean}"`);
     });
 
     $("#gradeFilterLevel").addEventListener("change", applyGradeFilter);
@@ -916,8 +965,14 @@
       const tr = e.target.closest("tr[data-sid]");
       if (!tr) return;
       if (e.target.classList.contains("g-score")) {
-        const lv = window.GvcnData.getTT27Level(e.target.value);
-        if (lv) tr.querySelector(".g-level").value = lv;
+        const rawVal = e.target.value;
+        const lv = window.GvcnData.getTT27Level(rawVal);
+        if (lv) {
+          tr.querySelector(".g-level").value = lv;
+        } else if (rawVal !== "" && (Number(rawVal) < 0 || Number(rawVal) > 10 || isNaN(Number(rawVal)))) {
+          tr.querySelector(".g-level").value = "";
+          toast("Điểm số hợp lệ phải nằm trong khoảng 0 – 10");
+        }
       }
       computeGradeStats();
     });

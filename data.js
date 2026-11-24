@@ -1,5 +1,5 @@
 /* Trợ lý GVCN — Dữ liệu mẫu & Hệ thống biểu mẫu tự động điền thông tin Trường · Lớp · GVCN */
-window.GvcnData = (() => {
+const GvcnData = (() => {
   const DEFAULT_PROFILE = {
     department: "PHÒNG GD&ĐT QUẬN / HUYỆN",
     school: "Trường Tiểu học Bình Minh",
@@ -112,8 +112,11 @@ window.GvcnData = (() => {
   };
 
   function getTT27Level(score) {
-    if (score === "" || score === null || score === undefined || isNaN(Number(score))) return "";
+    if (score === "" || score === null || score === undefined || typeof score === "boolean") return "";
+    if (typeof score === "string" && score.trim() === "") return "";
+    if (typeof score === "object") return "";
     const n = Number(score);
+    if (!Number.isFinite(n) || n < 0 || n > 10) return "";
     if (n >= 8) return "T";
     if (n >= 5) return "H";
     return "C";
@@ -514,3 +517,5 @@ window.GvcnData = (() => {
     buildParentMessage
   };
 })();
+if (typeof window !== "undefined") window.GvcnData = GvcnData;
+if (typeof module !== "undefined" && module.exports) module.exports = GvcnData;

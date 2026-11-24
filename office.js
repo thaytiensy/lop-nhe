@@ -1,8 +1,9 @@
 /* Bộ Office Văn Phòng Tích Hợp — Trợ lý GVCN (Word đa tài liệu · Excel đa sheet + phím mũi tên · PowerPoint .pptx gốc 100% thành công) */
-window.OfficeSuite = (() => {
+const OfficeSuite = (() => {
   const OFFICE_KEY = "tro-ly-gvcn-office-v3";
-  const $ = (s) => document.querySelector(s);
-  const $$ = (s) => [...document.querySelectorAll(s)];
+  const QUOTA_ERR_MSG = "Bộ nhớ trình duyệt đã đầy. Vui lòng xuất tệp Sao lưu (JSON) về máy hoặc xóa bớt tệp Office cũ.";
+  const $ = (s) => (typeof document !== "undefined" ? document.querySelector(s) : null);
+  const $$ = (s) => (typeof document !== "undefined" ? [...document.querySelectorAll(s)] : []);
 
   let state = {
     activeTab: "word",
@@ -16,21 +17,62 @@ window.OfficeSuite = (() => {
   };
 
   let notifyFn = () => {};
-  let getCtxFn = () => ({ profile: window.GvcnData.DEFAULT_PROFILE, cls: { name: "3A", students: [], attendance: {}, grades: [] } });
+  let lastQuotaWarnAt = 0;
+  let getCtxFn = () => ({
+    profile: typeof window !== "undefined" && window.GvcnData ? window.GvcnData.DEFAULT_PROFILE : {},
+    cls: { name: "3A", students: [], attendance: {}, grades: [] }
+  });
+
+  function escHtml(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function getOfficeIO() {
+    if (typeof window !== "undefined" && window.OfficeIO) return window.OfficeIO;
+    if (typeof globalThis !== "undefined" && globalThis.OfficeIO) return globalThis.OfficeIO;
+    if (typeof require === "function") {
+      try { return require("./office-io.js"); } catch {}
+    }
+    return null;
+  }
+
+  function sanitizeHtml(html) {
+    const io = getOfficeIO();
+    if (io && typeof io.sanitizeHtml === "function") return io.sanitizeHtml(html);
+    return escHtml(html);
+  }
+
+  function isSafeImageUrl(url) {
+    const io = getOfficeIO();
+    if (io && typeof io.isSafeImageUrl === "function") return io.isSafeImageUrl(url);
+    if (typeof url !== "string") return false;
+    const trimmed = url.trim();
+    return /^https?:\/\/[^\s"'<>]+$/i.test(trimmed) || /^data:image\/(png|jpeg|jpg|gif|webp);base64,[A-Za-z0-9+/=\r\n]+$/i.test(trimmed);
+  }
+
+  function isQuotaError(err) {
+    if (!err) return false;
+    return err.name === "QuotaExceededError" || err.name === "NS_ERROR_DOM_QUOTA_REACHED" || err.code === 22 || err.code === 1014;
+  }
 
   function save() {
     try {
+      if (typeof localStorage === "undefined") return false;
       localStorage.setItem(OFFICE_KEY, JSON.stringify(state));
-    } catch {
-      // Nếu file nhập có ảnh dung lượng lớn làm vượt ngưỡng localStorage, lưu bản không ảnh để không bị lỗi
-      try {
-        const slim = {
-          ...state,
-          slides: state.slides.map((s) => ({ ...s, img: s.img && s.img.length > 60000 ? "" : s.img })),
-          wordDocs: state.wordDocs.map((d) => ({ ...d, html: d.html && d.html.length > 200000 ? d.html.slice(0, 200000) : d.html }))
-        };
-        localStorage.setItem(OFFICE_KEY, JSON.stringify(slim));
-      } catch {}
+      return true;
+    } catch (err) {
+      console.error("OfficeSuite.save() localStorage error:", err);
+      const now = Date.now();
+      if (now - lastQuotaWarnAt > 2500) {
+        lastQuotaWarnAt = now;
+        notifyFn(isQuotaError(err) ? QUOTA_ERR_MSG : "Không thể lưu dữ liệu Office vào trình duyệt. Vui lòng xuất tệp Sao lưu (JSON).");
+      }
+      return false;
     }
   }
 
@@ -131,11 +173,11 @@ window.OfficeSuite = (() => {
     const sel = $("#wordDocSelect");
     if (!sel) return;
     sel.innerHTML = state.wordDocs
-      .map((d) => `<option value="${d.id}" ${d.id === state.activeWordId ? "selected" : ""}>${d.title.replace(/</g, "&lt;")}</option>`)
+      .map((d) => `<option value="${escHtml(d.id)}" ${d.id === state.activeWordId ? "selected" : ""}>${escHtml(d.title)}</option>`)
       .join("");
     const cur = getCurWord();
     if (cur) {
-      $("#wordEditor").innerHTML = cur.html || "";
+      $("#wordEditor").innerHTML = sanitizeHtml(cur.html || "");
       updateWordStats();
     }
   }
@@ -143,7 +185,7 @@ window.OfficeSuite = (() => {
   function openInWord(html, title) {
     const cleanTitle = title || "Văn bản mới";
     const id = `w${Date.now()}`;
-    state.wordDocs.push({ id, title: cleanTitle, html });
+    state.wordDocs.push({ id, title: cleanTitle, html: sanitizeHtml(html || "") });
     state.activeWordId = id;
     state.title = cleanTitle;
     if ($("#officeDocTitle")) $("#officeDocTitle").value = cleanTitle;
@@ -172,13 +214,13 @@ window.OfficeSuite = (() => {
       const ext = file.name.split(".").pop().toLowerCase();
       if (ext === "docx" && window.mammoth) {
         const res = await window.mammoth.convertToHtml({ arrayBuffer: buf });
-        openInWord(res.value || "<p>(Tệp trống)</p>", baseName);
+        openInWord(sanitizeHtml(res.value) || "<p>(Tệp trống)</p>", baseName);
         notifyFn(`Đã mở file Word: ${file.name}`);
         return;
       }
       const text = await file.text();
       const html = (ext === "html" || ext === "htm")
-        ? text
+        ? sanitizeHtml(text)
         : text.split(/\r?\n/).map((l) => `<p>${l.replace(/&/g, "&amp;").replace(/</g, "&lt;") || "&nbsp;"}</p>`).join("");
       openInWord(html, baseName);
       notifyFn(`Đã mở văn bản: ${file.name}`);
@@ -207,8 +249,15 @@ window.OfficeSuite = (() => {
       save();
     });
 
-    $("#btnWordNewDoc").addEventListener("click", () => {
-      const name = prompt("Tên tài liệu mới:", `Văn bản ${state.wordDocs.length + 1}`);
+    $("#btnWordNewDoc").addEventListener("click", async () => {
+      const name = await window.AppDialog.prompt({
+        title: "Tạo tài liệu Word mới",
+        label: "Tên tài liệu *",
+        defaultValue: `Văn bản ${state.wordDocs.length + 1}`,
+        required: true,
+        maxLength: 80,
+        confirmText: "Tạo mới"
+      });
       if (!name || !name.trim()) return;
       openInWord(`<p></p>`, name.trim());
       notifyFn(`Đã tạo tài liệu "${name.trim()}"`);
@@ -272,7 +321,8 @@ window.OfficeSuite = (() => {
       const r = new FileReader();
       r.onload = () => {
         ed.focus();
-        document.execCommand("insertHTML", false, `<p><img src="${r.result}" alt="ảnh"/></p>`);
+        if (!isSafeImageUrl(r.result)) { notifyFn("Định dạng ảnh không hợp lệ (chỉ hỗ trợ PNG, JPG, GIF, WEBP)"); return; }
+        document.execCommand("insertHTML", false, `<p><img src="${escHtml(r.result)}" alt="ảnh"/></p>`);
         const cur = getCurWord();
         if (cur) cur.html = ed.innerHTML;
         save();
@@ -319,74 +369,404 @@ window.OfficeSuite = (() => {
     return { r: parseInt(m[2], 10) - 1, c: col - 1 };
   }
 
-  function evalCell(sheet, r, c, depth = 0) {
-    if (depth > 15) return "#LOOP";
-    const raw = sheet.cells[`${r},${c}`]?.v ?? "";
+  /* ===================== SAFE FORMULA PARSER & EVALUATOR (ZERO EVAL/FUNCTION) ===================== */
+  const ALLOWED_FORMULA_FUNCS = new Set(["SUM", "AVERAGE", "AVG", "MIN", "MAX", "COUNT", "IF"]);
+  const FORMULA_ERROR_CODES = new Set(["#ERROR!", "#VALUE!", "#LOOP!"]);
+
+  class FormulaEvalError extends Error {
+    constructor(code) {
+      super(code);
+      this.code = code;
+    }
+  }
+
+  function isFormulaErrorVal(v) {
+    return typeof v === "string" && FORMULA_ERROR_CODES.has(v);
+  }
+
+  function tokenizeFormula(input) {
+    const tokens = [];
+    let i = 0;
+    const len = input.length;
+    while (i < len) {
+      const ch = input[i];
+      if (/\s/.test(ch)) { i++; continue; }
+
+      if (ch === '"') {
+        let str = "";
+        i++;
+        let closed = false;
+        while (i < len) {
+          if (input[i] === '"') {
+            if (input[i + 1] === '"') { str += '"'; i += 2; continue; }
+            i++;
+            closed = true;
+            break;
+          }
+          str += input[i++];
+        }
+        if (!closed) throw new FormulaEvalError("#ERROR!");
+        tokens.push({ type: "STRING", value: str });
+        continue;
+      }
+
+      if (/[0-9]/.test(ch) || (ch === "." && /[0-9]/.test(input[i + 1] || ""))) {
+        let numStr = "";
+        let dots = 0;
+        while (i < len && (/[0-9]/.test(input[i]) || input[i] === ".")) {
+          if (input[i] === ".") {
+            dots++;
+            if (dots > 1) throw new FormulaEvalError("#ERROR!");
+          }
+          numStr += input[i++];
+        }
+        if (i < len && /[A-Za-z_]/.test(input[i])) {
+          throw new FormulaEvalError("#ERROR!");
+        }
+        const n = Number(numStr);
+        if (!Number.isFinite(n)) throw new FormulaEvalError("#VALUE!");
+        tokens.push({ type: "NUMBER", value: n });
+        continue;
+      }
+
+      const two = input.slice(i, i + 2);
+      if (two === "<>" || two === "!=" || two === ">=" || two === "<=") {
+        tokens.push({ type: "OP", value: two });
+        i += 2;
+        continue;
+      }
+
+      if ("+-*/%^=<>".includes(ch)) {
+        tokens.push({ type: "OP", value: ch });
+        i++;
+        continue;
+      }
+      if (ch === "(") { tokens.push({ type: "LPAREN", value: ch }); i++; continue; }
+      if (ch === ")") { tokens.push({ type: "RPAREN", value: ch }); i++; continue; }
+      if (ch === ",") { tokens.push({ type: "COMMA", value: ch }); i++; continue; }
+      if (ch === ":") { tokens.push({ type: "COLON", value: ch }); i++; continue; }
+
+      if (ch === "$" || /[A-Za-z_]/.test(ch)) {
+        const rest = input.slice(i);
+        const cellMatch = /^(\$?[A-Za-z]+\$?\d+)(?![A-Za-z0-9_])/.exec(rest);
+        if (cellMatch) {
+          tokens.push({ type: "CELL", value: cellMatch[1].toUpperCase() });
+          i += cellMatch[1].length;
+          continue;
+        }
+        const idMatch = /^([A-Za-z_][A-Za-z0-9_]*)/.exec(rest);
+        if (idMatch) {
+          tokens.push({ type: "IDENT", value: idMatch[1].toUpperCase() });
+          i += idMatch[1].length;
+          continue;
+        }
+      }
+
+      throw new FormulaEvalError("#ERROR!");
+    }
+    tokens.push({ type: "EOF", value: "" });
+    return tokens;
+  }
+
+  function parseFormulaAst(tokens) {
+    let pos = 0;
+    const peek = () => tokens[pos];
+    const next = () => tokens[pos++];
+
+    function parseComparison() {
+      let left = parseAddSub();
+      while (peek().type === "OP" && ["=", "<>", "!=", "<", "<=", ">", ">="].includes(peek().value)) {
+        const op = next().value;
+        const right = parseAddSub();
+        left = { type: "BINARY", op, left, right };
+      }
+      return left;
+    }
+
+    function parseAddSub() {
+      let left = parseMulDiv();
+      while (peek().type === "OP" && (peek().value === "+" || peek().value === "-")) {
+        const op = next().value;
+        const right = parseMulDiv();
+        left = { type: "BINARY", op, left, right };
+      }
+      return left;
+    }
+
+    function parseMulDiv() {
+      let left = parsePower();
+      while (peek().type === "OP" && (peek().value === "*" || peek().value === "/" || peek().value === "%")) {
+        const op = next().value;
+        const right = parsePower();
+        left = { type: "BINARY", op, left, right };
+      }
+      return left;
+    }
+
+    function parsePower() {
+      let left = parseUnary();
+      if (peek().type === "OP" && peek().value === "^") {
+        next();
+        const right = parsePower();
+        return { type: "BINARY", op: "^", left, right };
+      }
+      return left;
+    }
+
+    function parseUnary() {
+      if (peek().type === "OP" && (peek().value === "+" || peek().value === "-")) {
+        const op = next().value;
+        return { type: "UNARY", op, arg: parseUnary() };
+      }
+      return parsePrimary();
+    }
+
+    function parsePrimary() {
+      const tok = peek();
+      if (tok.type === "NUMBER") { next(); return { type: "NUMBER", value: tok.value }; }
+      if (tok.type === "STRING") { next(); return { type: "STRING", value: tok.value }; }
+      if (tok.type === "LPAREN") {
+        next();
+        const expr = parseComparison();
+        if (peek().type !== "RPAREN") throw new FormulaEvalError("#ERROR!");
+        next();
+        return expr;
+      }
+      if (tok.type === "CELL") {
+        next();
+        if (peek().type === "COLON") {
+          next();
+          if (peek().type !== "CELL") throw new FormulaEvalError("#ERROR!");
+          const endTok = next();
+          return { type: "RANGE", start: tok.value, end: endTok.value };
+        }
+        return { type: "CELL", ref: tok.value };
+      }
+      if (tok.type === "IDENT") {
+        next();
+        if (peek().type === "LPAREN") {
+          if (!ALLOWED_FORMULA_FUNCS.has(tok.value)) throw new FormulaEvalError("#ERROR!");
+          next();
+          const args = [];
+          if (peek().type !== "RPAREN") {
+            args.push(parseComparison());
+            while (peek().type === "COMMA") {
+              next();
+              args.push(parseComparison());
+            }
+          }
+          if (peek().type !== "RPAREN") throw new FormulaEvalError("#ERROR!");
+          next();
+          if (tok.value === "IF" && (args.length < 2 || args.length > 3)) throw new FormulaEvalError("#ERROR!");
+          if (tok.value !== "IF" && args.length < 1) throw new FormulaEvalError("#ERROR!");
+          return { type: "CALL", name: tok.value, args };
+        }
+        if (tok.value === "TRUE") return { type: "BOOL", value: true };
+        if (tok.value === "FALSE") return { type: "BOOL", value: false };
+        throw new FormulaEvalError("#ERROR!");
+      }
+      throw new FormulaEvalError("#ERROR!");
+    }
+
+    const ast = parseComparison();
+    if (peek().type !== "EOF") throw new FormulaEvalError("#ERROR!");
+    return ast;
+  }
+
+  function toFormulaNumber(val) {
+    if (isFormulaErrorVal(val)) throw new FormulaEvalError(val);
+    if (val === "" || val === null || val === undefined) return 0;
+    if (typeof val === "boolean") return val ? 1 : 0;
+    if (typeof val === "number") {
+      if (!Number.isFinite(val)) throw new FormulaEvalError("#VALUE!");
+      return val;
+    }
+    const s = String(val).trim();
+    if (s === "") return 0;
+    const n = Number(s);
+    if (!Number.isFinite(n)) throw new FormulaEvalError("#VALUE!");
+    return n;
+  }
+
+  function tryAsNumber(val) {
+    if (typeof val === "number" && Number.isFinite(val)) return { ok: true, num: val };
+    if (typeof val === "string" && val.trim() !== "") {
+      const n = Number(val.trim());
+      if (Number.isFinite(n)) return { ok: true, num: n };
+    }
+    return { ok: false, num: NaN };
+  }
+
+  function compareFormulaVals(op, left, right) {
+    if (isFormulaErrorVal(left)) throw new FormulaEvalError(left);
+    if (isFormulaErrorVal(right)) throw new FormulaEvalError(right);
+    const ln = tryAsNumber(left);
+    const rn = tryAsNumber(right);
+
+    if (op === "=" || op === "<>" || op === "!=") {
+      let eq;
+      if (typeof left === "boolean" && typeof right === "boolean") {
+        eq = left === right;
+      } else if (ln.ok && rn.ok) {
+        eq = Math.abs(ln.num - rn.num) < 1e-12;
+      } else {
+        eq = String(left ?? "").toLowerCase() === String(right ?? "").toLowerCase();
+      }
+      return op === "=" ? eq : !eq;
+    }
+
+    let cmp;
+    if (ln.ok && rn.ok) {
+      cmp = ln.num - rn.num;
+    } else if (left === "" && rn.ok) {
+      cmp = 0 - rn.num;
+    } else if (ln.ok && right === "") {
+      cmp = ln.num - 0;
+    } else if (typeof left === "string" && typeof right === "string") {
+      cmp = left.toLowerCase().localeCompare(right.toLowerCase());
+    } else {
+      throw new FormulaEvalError("#VALUE!");
+    }
+    if (op === "<") return cmp < 0;
+    if (op === "<=") return cmp <= 0;
+    if (op === ">") return cmp > 0;
+    if (op === ">=") return cmp >= 0;
+    throw new FormulaEvalError("#ERROR!");
+  }
+
+  function evalFormulaAst(node, sheet, depth, visiting) {
+    switch (node.type) {
+      case "NUMBER":
+      case "STRING":
+      case "BOOL":
+        return node.value;
+      case "RANGE":
+        throw new FormulaEvalError("#VALUE!");
+      case "CELL": {
+        const p = parseRef(node.ref);
+        if (!p) throw new FormulaEvalError("#ERROR!");
+        const val = evalCell(sheet, p.r, p.c, depth + 1, visiting);
+        if (isFormulaErrorVal(val)) throw new FormulaEvalError(val);
+        return val;
+      }
+      case "UNARY": {
+        const v = toFormulaNumber(evalFormulaAst(node.arg, sheet, depth, visiting));
+        return node.op === "-" ? -v : +v;
+      }
+      case "BINARY": {
+        const left = evalFormulaAst(node.left, sheet, depth, visiting);
+        const right = evalFormulaAst(node.right, sheet, depth, visiting);
+        if (["=", "<>", "!=", "<", "<=", ">", ">="].includes(node.op)) {
+          return compareFormulaVals(node.op, left, right);
+        }
+        const a = toFormulaNumber(left);
+        const b = toFormulaNumber(right);
+        if (node.op === "+") return a + b;
+        if (node.op === "-") return a - b;
+        if (node.op === "*") return a * b;
+        if (node.op === "/") {
+          if (b === 0) throw new FormulaEvalError("#VALUE!");
+          return a / b;
+        }
+        if (node.op === "%") {
+          if (b === 0) throw new FormulaEvalError("#VALUE!");
+          return a % b;
+        }
+        if (node.op === "^") {
+          const res = Math.pow(a, b);
+          if (!Number.isFinite(res)) throw new FormulaEvalError("#VALUE!");
+          return res;
+        }
+        throw new FormulaEvalError("#ERROR!");
+      }
+      case "CALL": {
+        if (node.name === "IF") {
+          const condVal = evalFormulaAst(node.args[0], sheet, depth, visiting);
+          if (isFormulaErrorVal(condVal)) throw new FormulaEvalError(condVal);
+          let truthy;
+          if (typeof condVal === "boolean") truthy = condVal;
+          else if (typeof condVal === "number") truthy = condVal !== 0;
+          else if (typeof condVal === "string") {
+            const trimmed = condVal.trim().toUpperCase();
+            if (trimmed === "TRUE") truthy = true;
+            else if (trimmed === "FALSE" || trimmed === "") truthy = false;
+            else {
+              const n = Number(trimmed);
+              if (!Number.isFinite(n)) throw new FormulaEvalError("#VALUE!");
+              truthy = n !== 0;
+            }
+          } else {
+            truthy = Boolean(condVal);
+          }
+          if (truthy) return evalFormulaAst(node.args[1], sheet, depth, visiting);
+          return node.args.length >= 3 ? evalFormulaAst(node.args[2], sheet, depth, visiting) : false;
+        }
+
+        const nums = [];
+        for (const arg of node.args) {
+          if (arg.type === "RANGE") {
+            const p1 = parseRef(arg.start);
+            const p2 = parseRef(arg.end);
+            if (!p1 || !p2) throw new FormulaEvalError("#ERROR!");
+            const rMin = Math.min(p1.r, p2.r), rMax = Math.max(p1.r, p2.r);
+            const cMin = Math.min(p1.c, p2.c), cMax = Math.max(p1.c, p2.c);
+            for (let rr = rMin; rr <= rMax; rr++) {
+              for (let cc = cMin; cc <= cMax; cc++) {
+                const v = evalCell(sheet, rr, cc, depth + 1, visiting);
+                if (isFormulaErrorVal(v)) throw new FormulaEvalError(v);
+                const parsed = tryAsNumber(v);
+                if (parsed.ok) nums.push(parsed.num);
+              }
+            }
+          } else {
+            const v = evalFormulaAst(arg, sheet, depth, visiting);
+            if (isFormulaErrorVal(v)) throw new FormulaEvalError(v);
+            const parsed = tryAsNumber(v);
+            if (parsed.ok) nums.push(parsed.num);
+          }
+        }
+        if (!nums.length) return 0;
+        if (node.name === "SUM") return nums.reduce((a, b) => a + b, 0);
+        if (node.name === "AVERAGE" || node.name === "AVG") return nums.reduce((a, b) => a + b, 0) / nums.length;
+        if (node.name === "MIN") return Math.min(...nums);
+        if (node.name === "MAX") return Math.max(...nums);
+        if (node.name === "COUNT") return nums.length;
+        throw new FormulaEvalError("#ERROR!");
+      }
+      default:
+        throw new FormulaEvalError("#ERROR!");
+    }
+  }
+
+  function evaluateFormula(formulaStr, sheet = { cells: {} }, depth = 0, visiting = new Set()) {
+    const expr = String(formulaStr ?? "").replace(/^=/, "").trim();
+    if (!expr) return "";
+    try {
+      const tokens = tokenizeFormula(expr);
+      const ast = parseFormulaAst(tokens);
+      const out = evalFormulaAst(ast, sheet, depth, visiting);
+      if (typeof out === "number") {
+        if (!Number.isFinite(out)) return "#VALUE!";
+        return Number.isInteger(out) ? out : Number(out.toFixed(2));
+      }
+      return out;
+    } catch (err) {
+      if (err instanceof FormulaEvalError) return err.code;
+      return "#ERROR!";
+    }
+  }
+
+  function evalCell(sheet, r, c, depth = 0, visiting = null) {
+    if (depth > 25) return "#LOOP!";
+    const key = r + "," + c;
+    const seen = visiting ? new Set(visiting) : new Set();
+    if (seen.has(key)) return "#LOOP!";
+    seen.add(key);
+    const raw = sheet?.cells?.[key]?.v ?? "";
     if (raw === "" || raw === null || raw === undefined) return "";
     const str = String(raw);
     if (!str.startsWith("=")) return raw;
-
-    try {
-      let expr = str.slice(1).trim();
-      const expandRange = (a, b) => {
-        const p1 = parseRef(a), p2 = parseRef(b);
-        if (!p1 || !p2) return [];
-        const vals = [];
-        for (let rr = Math.min(p1.r, p2.r); rr <= Math.max(p1.r, p2.r); rr++) {
-          for (let cc = Math.min(p1.c, p2.c); cc <= Math.max(p1.c, p2.c); cc++) {
-            const v = evalCell(sheet, rr, cc, depth + 1);
-            const num = Number(v);
-            if (v !== "" && !isNaN(num)) vals.push(num);
-          }
-        }
-        return vals;
-      };
-
-      expr = expr.replace(/IF\(([^,]+),([^,]+),([^)]+)\)/gi, (_, cond, tVal, fVal) => {
-        const safeCond = cond.replace(/\b([A-Z]+\d+)\b/gi, (ref) => {
-          const p = parseRef(ref);
-          const v = p ? evalCell(sheet, p.r, p.c, depth + 1) : 0;
-          return isNaN(Number(v)) ? JSON.stringify(v) : Number(v);
-        });
-        return Function(`"use strict"; return (${safeCond});`)() ? tVal.trim() : fVal.trim();
-      });
-
-      expr = expr.replace(/\b(SUM|AVERAGE|AVG|MIN|MAX|COUNT)\(([^)]+)\)/gi, (_, fn, argStr) => {
-        let nums = [];
-        argStr.split(",").forEach((part) => {
-          const rm = /^(\$?[A-Z]+\$?\d+):(\$?[A-Z]+\$?\d+)$/i.exec(part.trim());
-          if (rm) nums = nums.concat(expandRange(rm[1], rm[2]));
-          else {
-            const p = parseRef(part);
-            const val = p ? evalCell(sheet, p.r, p.c, depth + 1) : part.trim();
-            if (val !== "" && !isNaN(Number(val))) nums.push(Number(val));
-          }
-        });
-        const f = fn.toUpperCase();
-        if (!nums.length) return 0;
-        if (f === "SUM") return nums.reduce((a, b) => a + b, 0);
-        if (f === "AVERAGE" || f === "AVG") return +(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2);
-        if (f === "MIN") return Math.min(...nums);
-        if (f === "MAX") return Math.max(...nums);
-        if (f === "COUNT") return nums.length;
-        return 0;
-      });
-
-      if (!/^["'].*["']$/.test(expr)) {
-        expr = expr.replace(/(?<![A-Z0-9_])\$?([A-Z]+)\$?(\d+)\b/gi, (ref) => {
-          const p = parseRef(ref);
-          if (!p) return 0;
-          const v = evalCell(sheet, p.r, p.c, depth + 1);
-          return v === "" || isNaN(Number(v)) ? 0 : Number(v);
-        });
-        const out = Function(`"use strict"; return (${expr});`)();
-        if (typeof out === "number" && !Number.isInteger(out)) return Number(out.toFixed(2));
-        return out;
-      }
-      return expr.replace(/^["']|["']$/g, "");
-    } catch {
-      return "#ERR";
-    }
+    return evaluateFormula(str, sheet, depth, seen);
   }
 
   function renderSheetTabs() {
@@ -467,13 +847,40 @@ window.OfficeSuite = (() => {
     switchTab("sheet");
   }
 
+  function makeUniqueSheetNames(sheets) {
+    const MAX_LEN = 31;
+    const usedLower = new Set();
+    return (sheets || []).map((sh, i) => {
+      const raw = typeof sh === "string" ? sh : sh?.name;
+      const fallback = "Sheet" + (i + 1);
+      let base = String(raw ?? "")
+        .replace(/[\\/?*[\]:]/g, "")
+        .replace(/^'+|'+$/g, "")
+        .trim();
+      if (!base) base = fallback;
+      let candidate = base.slice(0, MAX_LEN);
+      if (usedLower.has(candidate.toLowerCase())) {
+        let idx = 1;
+        while (true) {
+          const suffix = "_" + idx;
+          const trimmed = base.slice(0, Math.max(1, MAX_LEN - suffix.length));
+          candidate = trimmed + suffix;
+          if (!usedLower.has(candidate.toLowerCase())) break;
+          idx++;
+        }
+      }
+      usedLower.add(candidate.toLowerCase());
+      return candidate;
+    });
+  }
+
   function exportSheetXlsx() {
-    if (window.XLSX) {
+    if (typeof window !== "undefined" && window.XLSX) {
       const wb = window.XLSX.utils.book_new();
+      const uniqueNames = makeUniqueSheetNames(state.sheets);
       state.sheets.forEach((sh, i) => {
         const ws = window.XLSX.utils.aoa_to_sheet(sheetToAoA(sh));
-        const name = (sh.name || `Sheet${i + 1}`).replace(/[\\/?*[\]:]/g, "").slice(0, 30) || `Sheet${i + 1}`;
-        window.XLSX.utils.book_append_sheet(wb, ws, name);
+        window.XLSX.utils.book_append_sheet(wb, ws, uniqueNames[i]);
       });
       window.XLSX.writeFile(wb, safeFilename("xlsx"));
       notifyFn("Đã tải bảng tính Excel (.xlsx)");
@@ -481,7 +888,7 @@ window.OfficeSuite = (() => {
     }
     // Fallback Spreadsheet HTML (.xls) mở trực tiếp trong Microsoft Excel kể cả khi offline
     const aoa = sheetToAoA(getCurSheet());
-    const rowsHtml = aoa.map((r) => `<tr>${r.map((v) => `<td>${String(v ?? "").replace(/</g, "&lt;")}</td>`).join("")}</tr>`).join("");
+    const rowsHtml = aoa.map((r) => `<tr>${r.map((v) => `<td>${escHtml(v)}</td>`).join("")}</tr>`).join("");
     const xls = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body><table border="1">${rowsHtml}</table></body></html>`;
     downloadBlob(new Blob(["\ufeff", xls], { type: "application/vnd.ms-excel;charset=utf-8" }), safeFilename("xls"));
     notifyFn("Đã tải bảng tính Excel (.xls)");
@@ -620,13 +1027,21 @@ window.OfficeSuite = (() => {
       renderSheet();
     });
 
-    $("#btnRenameSheetTab").addEventListener("click", () => {
+    $("#btnRenameSheetTab").addEventListener("click", async () => {
       const sh = getCurSheet();
-      const name = prompt("Đổi tên Sheet:", sh.name);
+      const name = await window.AppDialog.prompt({
+        title: "Đổi tên Sheet",
+        label: "Tên Sheet mới (tối đa 31 ký tự) *",
+        defaultValue: sh.name,
+        required: true,
+        maxLength: 31,
+        confirmText: "Đổi tên"
+      });
       if (name && name.trim()) {
         sh.name = name.trim();
         save();
         renderSheetTabs();
+        notifyFn(`Đã đổi tên Sheet thành "${sh.name}"`);
       }
     });
 
@@ -760,7 +1175,7 @@ window.OfficeSuite = (() => {
     $("#slideNumBadge").textContent = `${state.slideIdx + 1} / ${state.slides.length}`;
 
     const slot = $("#slideImgSlot");
-    if (cur.img) {
+    if (cur.img && isSafeImageUrl(cur.img)) {
       slot.hidden = false;
       $("#slideImgPreview").src = cur.img;
     } else {
@@ -826,10 +1241,14 @@ window.OfficeSuite = (() => {
 
   function exportSlidesHtml() {
     const footerText = getSlideFooter();
-    const html = `<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>${safeFilename("html")}</title><style>body{margin:0;background:#0b1210;font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;color:#fff}.s{width:min(94vw,1120px);aspect-ratio:16/9;border-radius:14px;padding:44px 56px;box-sizing:border-box;display:none;flex-direction:column;justify-content:space-between}.s.on{display:flex}.emerald{background:#0f3d36;color:#e6f6f3}.chalk{background:#143b2c;color:#eaf6ef}.paper{background:#fafbf9;color:#111}.navy{background:#0f172a;color:#f8fafc}.warm{background:#fffbeb;color:#451a03}.plum{background:#2e1065;color:#f5f3ff}h1{margin:0 0 18px;font-size:38px}.b{font-size:22px;line-height:1.6;white-space:pre-wrap}.f{display:flex;justify-content:space-between;font-size:13px;opacity:.75}.nav{position:fixed;bottom:18px;display:flex;gap:10px}button{padding:8px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:700}</style></head><body>${state.slides
-      .map(
-        (s, i) => `<section class="s ${s.theme || "emerald"} ${i === 0 ? "on" : ""}"><div><h1>${(s.title || "").replace(/</g, "&lt;")}</h1><div class="b">${(s.body || "").replace(/</g, "&lt;")}</div></div><div class="f"><span>${footerText.replace(/</g, "&lt;")}</span><span>${i + 1} / ${state.slides.length}</span></div></section>`
-      )
+    const safeThemes = new Set(["emerald", "chalk", "paper", "navy", "warm", "plum"]);
+    const html = `<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>${escHtml(safeFilename("html"))}</title><style>body{margin:0;background:#0b1210;font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;color:#fff}.s{width:min(94vw,1120px);aspect-ratio:16/9;border-radius:14px;padding:44px 56px;box-sizing:border-box;display:none;flex-direction:column;justify-content:space-between}.s.on{display:flex}.emerald{background:#0f3d36;color:#e6f6f3}.chalk{background:#143b2c;color:#eaf6ef}.paper{background:#fafbf9;color:#111}.navy{background:#0f172a;color:#f8fafc}.warm{background:#fffbeb;color:#451a03}.plum{background:#2e1065;color:#f5f3ff}h1{margin:0 0 18px;font-size:38px}.row{display:flex;gap:24px;align-items:flex-start}.b{flex:1;font-size:22px;line-height:1.6;white-space:pre-wrap}.img{max-width:38%;border-radius:10px;max-height:55vh;object-fit:contain}.f{display:flex;justify-content:space-between;font-size:13px;opacity:.75}.nav{position:fixed;bottom:18px;display:flex;gap:10px}button{padding:8px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:700}</style></head><body>${state.slides
+      .map((s, i) => {
+        const theme = safeThemes.has(s.theme) ? s.theme : "emerald";
+        const imgTag = s.img && isSafeImageUrl(s.img) ? `<img class="img" src="${escHtml(s.img)}" alt="" />` : "";
+        const col2Tag = s.layout === "two-col" && s.col2 ? `<div class="b">${escHtml(s.col2)}</div>` : "";
+        return `<section class="s ${theme} ${i === 0 ? "on" : ""}"><div><h1>${escHtml(s.title || "")}</h1><div class="row"><div class="b">${escHtml(s.body || "")}</div>${col2Tag}${imgTag}</div></div><div class="f"><span>${escHtml(footerText)}</span><span>${i + 1} / ${state.slides.length}</span></div></section>`;
+      })
       .join("")}<div class="nav"><button onclick="go(-1)">← Trước</button><button onclick="go(1)">Tiếp →</button></div><script>let i=0,ss=[...document.querySelectorAll('.s')];function go(d){ss[i].classList.remove('on');i=Math.max(0,Math.min(ss.length-1,i+d));ss[i].classList.add('on')}document.onkeydown=e=>{if(e.key==='ArrowRight'||e.key===' ')go(1);if(e.key==='ArrowLeft')go(-1)}</script></body></html>`;
     downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), safeFilename("html"));
     notifyFn("Đã tải bài trình chiếu web (.html)");
@@ -842,17 +1261,18 @@ window.OfficeSuite = (() => {
     if (!s) return;
     const stage = $("#presenterStage");
     stage.className = `presenter-stage theme-${s.theme || "emerald"} layout-${s.layout || "content"}`;
+    const safeImgHtml = s.img && isSafeImageUrl(s.img) ? `<img src="${escHtml(s.img)}" alt="" style="max-width:38%;border-radius:10px;max-height:55vh;object-fit:contain;" />` : "";
     stage.innerHTML = `
       <div class="slide-accent-bar"></div>
       <div>
-        <h1>${(s.title || "").replace(/</g, "&lt;")}</h1>
+        <h1>${escHtml(s.title || "")}</h1>
         <div style="display:flex;gap:24px;align-items:flex-start;">
-          <div class="pres-body" style="flex:1;">${(s.body || "").replace(/</g, "&lt;")}</div>
-          ${s.layout === "two-col" && s.col2 ? `<div class="pres-body" style="flex:1;">${s.col2.replace(/</g, "&lt;")}</div>` : ""}
-          ${s.img ? `<img src="${s.img}" style="max-width:38%;border-radius:10px;max-height:55vh;object-fit:contain;" />` : ""}
+          <div class="pres-body" style="flex:1;">${escHtml(s.body || "")}</div>
+          ${s.layout === "two-col" && s.col2 ? `<div class="pres-body" style="flex:1;">${escHtml(s.col2)}</div>` : ""}
+          ${safeImgHtml}
         </div>
       </div>
-      <div class="slide-footer-mark"><span>${getSlideFooter().replace(/</g, "&lt;")}</span><span>${presIdx + 1} / ${state.slides.length}</span></div>
+      <div class="slide-footer-mark"><span>${escHtml(getSlideFooter())}</span><span>${presIdx + 1} / ${state.slides.length}</span></div>
     `;
     $("#presCounter").textContent = `${presIdx + 1} / ${state.slides.length}`;
     const nBox = $("#presenterNotes");
@@ -963,7 +1383,7 @@ window.OfficeSuite = (() => {
       const f = e.target.files?.[0];
       if (!f) return;
       const r = new FileReader();
-      r.onload = () => { state.slides[state.slideIdx].img = r.result; save(); renderSlides(); };
+      r.onload = () => { if (!isSafeImageUrl(r.result)) { notifyFn("Định dạng ảnh không hợp lệ (chỉ hỗ trợ PNG, JPG, GIF, WEBP)"); return; } state.slides[state.slideIdx].img = r.result; save(); renderSlides(); };
       r.readAsDataURL(f);
       e.target.value = "";
     });
@@ -1019,14 +1439,35 @@ window.OfficeSuite = (() => {
     exportSheetXlsx,
     exportSlidesPptx,
     refreshFooter: renderSlides,
+    evalCell,
+    evaluateFormula,
+    makeUniqueSheetNames,
+    sanitizeHtml,
+    isSafeImageUrl,
+    escHtml,
+    save,
     getState: () => state,
     setState: (s) => {
-      if (!s) return;
+      if (!s || typeof s !== "object") return;
       state = Object.assign(state, s);
+      if (Array.isArray(state.wordDocs)) {
+        state.wordDocs = state.wordDocs.map((d) => ({ ...d, html: sanitizeHtml(d?.html || "") }));
+      }
+      if (Array.isArray(state.slides)) {
+        state.slides = state.slides.map((sl) => {
+          const next = { ...sl };
+          if (next.img && !isSafeImageUrl(next.img)) delete next.img;
+          return next;
+        });
+      }
       save();
-      renderWordDocBar();
-      renderSheet();
-      renderSlides();
+      if (typeof document !== "undefined") {
+        renderWordDocBar();
+        renderSheet();
+        renderSlides();
+      }
     }
   };
 })();
+if (typeof window !== "undefined") window.OfficeSuite = OfficeSuite;
+if (typeof module !== "undefined" && module.exports) module.exports = OfficeSuite;

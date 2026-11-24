@@ -1486,3 +1486,53 @@ body.dark .plan-promo-tag {
   color: var(--primary);
   font-weight: 600;
 }
+
+/* ===================== APP CUSTOM DIALOG (MOBILE / IN-APP BROWSER SAFE) ===================== */
+.app-dialog-backdrop { z-index: 90; }
+.app-dialog-sheet { max-width: 460px; width: 100%; }
+.app-dialog-body { display: flex; flex-direction: column; gap: 6px; }
+.app-dialog-fields { display: flex; flex-direction: column; gap: 12px; }
+.app-dialog-fields .field { display: flex; flex-direction: column; gap: 6px; }
+.app-dialog-fields .field span { font-size: 13px; font-weight: 600; color: var(--ink); }
+.app-dialog-fields .field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.app-dialog-fields .field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.app-dialog-error {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger);
+}
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover {
+  filter: brightness(0.92);
+}
+@media (max-width: 520px) {
+  .app-dialog-actions { flex-direction: column-reverse; }
+  .app-dialog-actions .btn { width: 100%; min-height: 42px; justify-content: center; }
+}

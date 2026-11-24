@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dịch Vụ Thiết Kế Web App Quản Lý Trường Học Gọn Nhẹ Theo Yêu Cầu 2026 | Trợ lý GVCN</title>
+  <meta name="description" content="Dịch vụ thiết kế và lập trình Web App quản lý trường học, tổ chuyên môn và trung tâm giáo dục gọn nhẹ theo yêu cầu 2026. Tải trang dưới 1 giây, tên miền riêng, chi phí chỉ từ 1.990.000đ." />
+  <meta name="keywords" content="thiết kế web app giáo dục theo yêu cầu, làm phần mềm quản lý trường học gọn nhẹ, app giáo dục riêng cho trường, lập trình web app vercel nextjs" />
+  <meta name="author" content="Trợ lý GVCN" />
+  <link rel="canonical" href="https://lop-nhe.vercel.app/thiet-ke-web-app-truong-hoc" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-light: #f0fdfa;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding-bottom: 60px;
+    }
+    header.site-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 20px;
+    }
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+    .brand svg { width: 28px; height: 28px; fill: var(--primary); }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: var(--bg); border-color: #cbd5e1; }
+    .btn-zalo {
+      background: #0068ff;
+      color: #ffffff;
+    }
+    .btn-zalo:hover { background: #0056d6; }
+    main.article-container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .article-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 2rem;
+      line-height: 1.35;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 16px;
+    }
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .lead-box {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 0 10px 10px 0;
+      font-size: 1.05rem;
+      margin-bottom: 32px;
+      color: #134e4a;
+    }
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 32px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+    h3 {
+      font-size: 1.12rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 20px 0 10px 0;
+    }
+    p { margin-bottom: 16px; font-size: 1rem; color: #334155; }
+    ul, ol { margin: 12px 0 20px 24px; color: #334155; }
+    li { margin-bottom: 8px; }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .feature-card h4 {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .feature-card p { font-size: 0.92rem; margin-bottom: 0; }
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .step-num {
+      background: var(--primary);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .cta-banner {
+      background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 32px;
+      text-align: center;
+      margin: 40px 0 20px 0;
+    }
+    .cta-banner h3 { color: #ffffff; font-size: 1.5rem; margin-bottom: 12px; }
+    .cta-banner p { color: #ccfbf1; font-size: 1rem; margin-bottom: 24px; }
+    .cta-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cta-btn-white {
+      background: #ffffff;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .cta-btn-white:hover { background: #f0fdfa; }
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      background: #ffffff;
+    }
+    .faq-q { font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .faq-a { color: #475569; font-size: 0.95rem; margin-bottom: 0; }
+    footer.site-footer {
+      max-width: 900px;
+      margin: 40px auto 0 auto;
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      padding: 0 20px;
+    }
+    @media (max-width: 640px) {
+      .article-card { padding: 24px 18px; }
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.25rem; }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Dịch vụ Thiết kế Web App Quản lý Trường học Gọn nhẹ",
+    "description": "Lập trình và triển khai Web App giáo dục nội bộ theo biểu mẫu riêng cho trường học, tổ khối và trung tâm đào tạo.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Trợ lý GVCN",
+      "telephone": "+84353205414",
+      "email": "thaytiensy@gmail.com"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "1990000",
+      "priceCurrency": "VND"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Chi phí thiết kế Web App trường học trọn gói là bao nhiêu?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gói thiết kế theo yêu cầu bắt đầu từ 1.990.000đ trọn gói, bao gồm lập trình theo biểu mẫu của trường, gắn logo, cấu hình tên miền riêng và bảo hành kỹ thuật 12 tháng."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Thời gian bàn giao phần mềm là bao lâu?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Thời gian triển khai thông thường từ 3 - 7 ngày làm việc sau khi tiếp nhận mẫu biểu và yêu cầu cụ thể từ Ban giám hiệu."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="brand">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+        <span>Trợ lý GVCN</span>
+      </a>
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline">Xem Demo Web App</a>
+        <a href="https://zalo.me/0353205414" target="_blank" rel="noopener" class="btn btn-zalo">Tư Vấn Zalo</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="article-container">
+    <article class="article-card">
+      <span class="badge">Dịch Vụ Số Giáo Dục</span>
+      <h1>Dịch Vụ Thiết Kế Web App Quản Lý Trường Học &amp; Công Cụ Giáo Dục Gọn Nhẹ Theo Yêu Cầu 2026</h1>
+      <div class="meta-bar">
+        <span>Cập nhật: 24/11/2026</span>
+        <span>•</span>
+        <span>Thời gian đọc: 5 phút</span>
+        <span>•</span>
+        <span>Chuyên trách: Đội ngũ Kiến trúc sư Tạo App &amp; Trợ lý GVCN</span>
+      </div>
+
+      <div class="lead-box">
+        <strong>Giải pháp dành cho:</strong> Ban Giám Hiệu, Hiệu Phó chuyên môn, Tổ trưởng chuyên môn và Chủ trung tâm đào tạo đang cần một giải pháp số hóa nhẹ nhàng, tùy biến đúng 100% biểu mẫu quản lý nội bộ với chi phí hợp lý.
+      </div>
+
+      <h2>1. Vì sao các trường học và tổ khối cần một Web App gọn nhẹ riêng?</h2>
+      <p>Trong thực tế triển khai công nghệ thông tin tại các cơ sở giáo dục phổ thông, nhiều đơn vị gặp phải các rào cản lớn:</p>
+      <ul>
+        <li><strong>Hệ thống quản lý lớn cồng kềnh, phức tạp:</strong> Các phần mềm hiện hành thường có quá nhiều chức năng không cần thiết, giao diện khó dùng khiến giáo viên mất nhiều thời gian nhập liệu.</li>
+        <li><strong>Thiếu linh hoạt theo biểu mẫu địa phương:</strong> Mỗi Sở/Phòng GD&amp;ĐT hoặc từng trường thường có những tiêu chí và quy định báo cáo nội bộ riêng biệt mà các hệ thống đóng gói sẵn không đáp ứng được.</li>
+        <li><strong>Chi phí duy trì và bảo trì định kỳ quá đắt đỏ:</strong> Nhiều đơn vị phải trả phí thuê bao hàng năm từ hàng chục đến hàng trăm triệu đồng cho những tính năng hiếm khi dùng đến.</li>
+      </ul>
+
+      <h2>2. Năng lực triển khai từ Đội ngũ Tạo App &amp; Trợ lý GVCN</h2>
+      <p>Với kinh nghiệm xây dựng các công cụ phục vụ hàng ngàn giáo viên, chúng tôi cam kết mang lại sản phẩm tối ưu nhất:</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Tốc độ tải dưới 1 giây</h4>
+          <p>Triển khai trên nền tảng đám mây hiện đại (Vercel / Next.js / Edge Network), tối ưu hóa trải nghiệm mượt mà trên cả điện thoại và máy tính.</p>
+        </div>
+        <div class="feature-card">
+          <h4>100% Nhận diện riêng</h4>
+          <p>Tùy biến trọn vẹn theo thương hiệu nhà trường: Gắn logo trường, tên miền riêng (VD: quanly.truongabc.edu.vn) và màu sắc nhận diện.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Phân quyền thông minh</h4>
+          <p>Hỗ trợ phân cấp quản trị rõ ràng: BGH giám sát toàn trường, Tổ trưởng quản lý khối lớp, Giáo viên chủ nhiệm &amp; bộ môn cập nhật điểm số.</p>
+        </div>
+      </div>
+
+      <h2>3. Quy trình làm việc và bảng giá minh bạch</h2>
+      <p>Chúng tôi áp dụng quy trình tinh gọn, nhanh chóng và rõ ràng qua 4 bước:</p>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div>
+            <strong>Tiếp nhận yêu cầu:</strong> Tiếp nhận mẫu biểu Excel/Word hiện có và các tiêu chí quản trị đặc thù từ nhà trường qua Zalo hoặc Email.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div>
+            <strong>Bản thử nghiệm (Demo) trong 48h:</strong> Thiết kế bản mẫu trực quan trên web để BGH và giáo viên trải nghiệm thực tế các luồng thao tác cốt lõi.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div>
+            <strong>Hoàn thiện &amp; Bàn giao:</strong> Tinh chỉnh theo góp ý, gắn tên miền riêng, cung cấp video hướng dẫn ngắn gọn cho giáo viên.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div>
+            <strong>Bảo hành &amp; Đồng hành 12 tháng:</strong> Hỗ trợ kỹ thuật 1-1, sao lưu dữ liệu định kỳ và cập nhật miễn phí khi có điều chỉnh biểu mẫu.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#f1f5f9;border-radius:12px;padding:24px;margin:28px 0;">
+        <h3 style="margin-top:0;color:var(--primary);">Bảng giá ưu đãi triển khai Đợt 1</h3>
+        <p>• <strong>Gói Khởi Điểm Trường/Tổ Khối:</strong> <strong>Từ 1.990.000đ trọn gói</strong> (Giá gốc 2.500.000đ). Bao gồm: Số hóa trọn gói 1 biểu mẫu cốt lõi (Sổ điểm / Điểm danh / Khảo sát), phân quyền tối đa 15 giáo viên, hỗ trợ tên miền riêng.</p>
+        <p>• <strong>Gói Toàn Diện Trường Học:</strong> Theo quy mô và số lượng biểu mẫu chi tiết. Liên hệ nhận báo giá trong 15 phút.</p>
+      </div>
+
+      <h2>4. Đăng ký tư vấn trực tiếp trong 5 phút</h2>
+      <p>Quý Ban giám hiệu và thầy cô có nhu cầu tìm hiểu hoặc nhận bản demo thử nghiệm có thể liên hệ ngay:</p>
+      <ul>
+        <li><strong>Hotline / Zalo hỗ trợ:</strong> <a href="https://zalo.me/0353205414" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;">0353205414</a></li>
+        <li><strong>Email chính thức:</strong> <a href="mailto:thaytiensy@gmail.com" style="color:var(--primary);font-weight:700;">thaytiensy@gmail.com</a></li>
+        <li><strong>Thời gian phản hồi:</strong> Trong vòng 30 phút (tất cả các ngày trong tuần).</li>
+      </ul>
+
+      <div class="cta-banner">
+        <h3>Sở hữu công cụ quản trị riêng cho trường của bạn</h3>
+        <p>Gọn nhẹ • Tùy biến chính xác theo biểu mẫu địa phương • Chi phí tiết kiệm</p>
+        <div class="cta-buttons">
+          <a href="https://zalo.me/0353205414" target="_blank" rel="noopener" class="btn cta-btn-white">Nhắn Zalo: 0353205414</a>
+          <a href="/" class="btn btn-outline" style="border-color:#ffffff;color:#ffffff;">Xem Trải Nghiệm Demo</a>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Trợ lý GVCN — Giải pháp chuyển đổi số tinh gọn cho giáo dục phổ thông.</p>
+    <p>Hotline/Zalo: 0353205414 • Email: thaytiensy@gmail.com</p>
+  </footer>
+</body>
+</html>

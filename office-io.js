@@ -5,7 +5,7 @@
  *  - PowerPoint: .pptx (Native OpenXML hỗ trợ mọi trình tạo: MS PowerPoint, Google Slides, WPS, Canva, LibreOffice), .ppt (97-2003), .json
  *  - ZIP Engine: Hỗ trợ STORE + DEFLATE (DecompressionStream + Pure-JS RFC 1951 fallback), ZIP64, tra cứu không phân biệt hoa thường.
  */
-window.OfficeIO = (() => {
+const OfficeIO = (() => {
   const tdUtf8 = new TextDecoder("utf-8", { fatal: false });
   const tdUtf16Le = new TextDecoder("utf-16le", { fatal: false });
   const tdUtf16Be = new TextDecoder("utf-16be", { fatal: false });
@@ -646,11 +646,248 @@ window.OfficeIO = (() => {
     return tdUtf8.decode(new Uint8Array(out));
   }
 
+  /* ===================== HTML SANITIZER & SAFE URL VALIDATOR ===================== */
+  const DANGEROUS_TAGS = new Set([
+    "script", "style", "meta", "link", "title", "xml",
+    "iframe", "object", "embed", "svg", "applet", "form",
+    "base", "noscript", "template", "math"
+  ]);
+  const SAFE_TAGS = new Set([
+    "p", "br", "hr", "div", "span", "b", "strong", "i", "em", "u", "s", "strike",
+    "del", "ins", "sub", "sup", "small", "mark", "code", "pre", "blockquote",
+    "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "dl", "dt", "dd",
+    "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption", "colgroup", "col",
+    "a", "img", "font", "center", "figure", "figcaption"
+  ]);
+  const VOID_TAGS = new Set(["br", "hr", "img", "col"]);
+  const GLOBAL_SAFE_ATTRS = new Set(["style", "class", "align", "dir", "lang", "title"]);
+  const TAG_SAFE_ATTRS = {
+    a: new Set(["href", "target", "rel"]),
+    img: new Set(["src", "alt", "width", "height"]),
+    table: new Set(["border", "cellpadding", "cellspacing", "width"]),
+    td: new Set(["colspan", "rowspan", "width", "height", "valign", "bgcolor"]),
+    th: new Set(["colspan", "rowspan", "width", "height", "valign", "bgcolor"]),
+    col: new Set(["span", "width"]),
+    colgroup: new Set(["span", "width"]),
+    font: new Set(["color", "face", "size"])
+  };
+  const SAFE_CSS_PROPS = new Set([
+    "text-align", "color", "background", "background-color",
+    "font-size", "font-family", "font-weight", "font-style", "text-decoration",
+    "margin", "margin-top", "margin-bottom", "margin-left", "margin-right",
+    "padding", "padding-top", "padding-bottom", "padding-left", "padding-right",
+    "border", "border-top", "border-bottom", "border-left", "border-right", "border-collapse",
+    "width", "max-width", "min-width", "height", "max-height",
+    "line-height", "vertical-align", "list-style", "list-style-type",
+    "white-space", "display", "object-fit", "border-radius"
+  ]);
+
+  function decodeBasicEntities(str) {
+    return String(str ?? "")
+      .replace(/&#x([0-9a-f]+);?/gi, (_, hex) => {
+        const cp = parseInt(hex, 16);
+        return Number.isFinite(cp) && cp >= 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : "";
+      })
+      .replace(/&#(\d+);?/g, (_, dec) => {
+        const cp = parseInt(dec, 10);
+        return Number.isFinite(cp) && cp >= 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : "";
+      })
+      .replace(/&colon;/gi, ":")
+      .replace(/&tab;/gi, "\t")
+      .replace(/&newline;/gi, "\n")
+      .replace(/&amp;/gi, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;|&apos;/gi, "'");
+  }
+
+  function isSafeImageUrl(url) {
+    if (typeof url !== "string") return false;
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    const decoded = decodeBasicEntities(trimmed).trim();
+    const compact = decoded.replace(/[\u0000-\u0020]+/g, "");
+    if (/^(javascript|vbscript):/i.test(compact)) return false;
+    if (/^https?:\/\/[^\s"'<>]+$/i.test(decoded) && !/[\u0000-\u001F\u007F]/.test(decoded)) {
+      return true;
+    }
+    if (/^data:image\/(png|jpeg|jpg|gif|webp);base64,[A-Za-z0-9+/=\r\n]+$/i.test(decoded)) {
+      return true;
+    }
+    return false;
+  }
+
+  function isSafeHref(url) {
+    if (typeof url !== "string") return false;
+    const decoded = decodeBasicEntities(url).trim();
+    if (!decoded) return false;
+    const compact = decoded.replace(/[\u0000-\u0020]+/g, "");
+    if (/^(javascript|vbscript|data):/i.test(compact)) return false;
+    return /^(https?:\/\/|mailto:|tel:|#)/i.test(decoded);
+  }
+
+  function sanitizeStyle(styleStr) {
+    if (typeof styleStr !== "string" || !styleStr.trim()) return "";
+    const decoded = decodeBasicEntities(styleStr);
+    if (/expression\s*\(|javascript:|vbscript:|url\s*\(|@import|behavior\s*:|-moz-binding/i.test(decoded)) {
+      return "";
+    }
+    const safeDecls = [];
+    for (const part of decoded.split(";")) {
+      const idx = part.indexOf(":");
+      if (idx < 0) continue;
+      const prop = part.slice(0, idx).trim().toLowerCase();
+      const val = part.slice(idx + 1).trim();
+      if (!val || !SAFE_CSS_PROPS.has(prop)) continue;
+      if (/[<>]/.test(val)) continue;
+      safeDecls.push(prop + ":" + val);
+    }
+    return safeDecls.join(";");
+  }
+
+  function sanitizeAttr(tag, rawName, rawVal) {
+    const name = String(rawName || "").trim().toLowerCase();
+    if (!name || name.startsWith("on")) return null;
+    const allowedForTag = TAG_SAFE_ATTRS[tag];
+    if (!GLOBAL_SAFE_ATTRS.has(name) && !(allowedForTag && allowedForTag.has(name))) {
+      return null;
+    }
+    const val = String(rawVal ?? "");
+    if (name === "style") {
+      const clean = sanitizeStyle(val);
+      return clean ? { name, value: clean } : null;
+    }
+    if (name === "src") {
+      if (tag === "img" && isSafeImageUrl(val)) return { name, value: val.trim() };
+      return null;
+    }
+    if (name === "href") {
+      if (tag === "a" && isSafeHref(val)) return { name, value: val.trim() };
+      return null;
+    }
+    if (name === "target") {
+      return val === "_blank" ? { name, value: "_blank" } : null;
+    }
+    if (name === "rel") {
+      return { name, value: "noopener noreferrer" };
+    }
+    return { name, value: val };
+  }
+
+  function sanitizeHtmlFallback(rawHtml) {
+    let s = String(rawHtml ?? "");
+    s = s.replace(/<!--[\s\S]*?-->/g, "");
+    const containerDanger = ["script", "style", "title", "xml", "iframe", "object", "svg", "applet", "form", "noscript", "template", "math"].join("|");
+    const allDanger = [...DANGEROUS_TAGS].join("|");
+    const pairedDangerRe = new RegExp("<\\s*(" + containerDanger + ")(?:\\s[^<>]*)?>[\\s\\S]*?<\\s*\\/\\s*\\1\\s*>", "gi");
+    const singleDangerRe = new RegExp("<\\s*\\/?\\s*(?:" + allDanger + ")(?:\\s[^<>]*)?\\/?>", "gi");
+    let prev = "";
+    let guard = 0;
+    while (s !== prev && guard++ < 10) {
+      prev = s;
+      s = s.replace(pairedDangerRe, "").replace(singleDangerRe, "");
+    }
+
+    s = s.replace(/<\s*(\/?)\s*([a-zA-Z][a-zA-Z0-9:-]*)([^<>]*)>/g, (match, slash, rawTag, rawAttrs) => {
+      const tag = rawTag.toLowerCase();
+      if (!SAFE_TAGS.has(tag)) return "";
+      if (slash) return VOID_TAGS.has(tag) ? "" : "</" + tag + ">";
+
+      const attrs = [];
+      let hasBlankTarget = false;
+      let hasRel = false;
+      const attrRe = /([a-zA-Z_:][a-zA-Z0-9_.:-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+      let m;
+      while ((m = attrRe.exec(rawAttrs))) {
+        const aName = m[1];
+        const aVal = m[2] ?? m[3] ?? m[4] ?? "";
+        const clean = sanitizeAttr(tag, aName, aVal);
+        if (clean) {
+          if (clean.name === "target" && clean.value === "_blank") hasBlankTarget = true;
+          if (clean.name === "rel") hasRel = true;
+          const escVal = clean.value
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+          attrs.push(clean.name + '="' + escVal + '"');
+        }
+      }
+      if (tag === "a" && hasBlankTarget && !hasRel) {
+        attrs.push('rel="noopener noreferrer"');
+      }
+      if (tag === "img" && !attrs.some((a) => a.startsWith("src="))) {
+        return "";
+      }
+      const attrStr = attrs.length ? " " + attrs.join(" ") : "";
+      return VOID_TAGS.has(tag) ? "<" + tag + attrStr + " />" : "<" + tag + attrStr + ">";
+    });
+    return s;
+  }
+
+  function sanitizeHtml(rawHtml) {
+    if (rawHtml === null || rawHtml === undefined) return "";
+    const input = String(rawHtml);
+    if (!input.trim()) return "";
+
+    if (typeof DOMParser !== "undefined") {
+      try {
+        const doc = new DOMParser().parseFromString(input, "text/html");
+        if (doc && doc.body) {
+          const walk = (node) => {
+            const children = [...node.childNodes];
+            for (const child of children) {
+              if (child.nodeType === 8) {
+                child.remove();
+                continue;
+              }
+              if (child.nodeType !== 1) continue;
+              const tag = child.tagName.toLowerCase();
+              if (DANGEROUS_TAGS.has(tag)) {
+                child.remove();
+                continue;
+              }
+              walk(child);
+              if (!SAFE_TAGS.has(tag)) {
+                while (child.firstChild) node.insertBefore(child.firstChild, child);
+                child.remove();
+                continue;
+              }
+              const attrList = [...child.attributes];
+              let hasBlankTarget = false;
+              let hasValidImgSrc = false;
+              for (const attr of attrList) {
+                const clean = sanitizeAttr(tag, attr.name, attr.value);
+                if (!clean) {
+                  child.removeAttribute(attr.name);
+                } else {
+                  child.setAttribute(clean.name, clean.value);
+                  if (clean.name === "target" && clean.value === "_blank") hasBlankTarget = true;
+                  if (tag === "img" && clean.name === "src") hasValidImgSrc = true;
+                }
+              }
+              if (tag === "a" && hasBlankTarget) {
+                child.setAttribute("rel", "noopener noreferrer");
+              }
+              if (tag === "img" && !hasValidImgSrc) {
+                child.remove();
+              }
+            }
+          };
+          walk(doc.body);
+          return doc.body.innerHTML;
+        }
+      } catch (err) {
+        console.warn("DOMParser sanitize fallback:", err);
+      }
+    }
+    return sanitizeHtmlFallback(input);
+  }
+
   function extractCleanBodyHtml(rawHtml) {
-    const doc = new DOMParser().parseFromString(rawHtml, "text/html");
-    doc.querySelectorAll("script, style, meta, link, title, xml").forEach((el) => el.remove());
-    const bodyHtml = doc.body ? doc.body.innerHTML.trim() : rawHtml;
-    return bodyHtml || "<p>(Tệp trống)</p>";
+    const cleaned = sanitizeHtml(rawHtml).trim();
+    return cleaned || "<p>(Tệp trống)</p>";
   }
 
   function parseMhtmlToHtml(rawText) {
@@ -944,24 +1181,24 @@ window.OfficeIO = (() => {
 
     if (info.kind === "docx") {
       // Thử mammoth nếu đã sẵn sàng, nếu lỗi/offline dùng ngay bộ đọc Native DOCX
-      const mammothLib = window.mammoth || (await waitForGlobal("mammoth", 900));
+      const mammothLib = (typeof window !== "undefined" && window.mammoth) || (await waitForGlobal("mammoth", 900));
       if (mammothLib) {
         try {
           const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
           const res = await mammothLib.convertToHtml({ arrayBuffer: ab });
           if (res && res.value && res.value.trim()) {
-            return { html: res.value, warning: "" };
+            return { html: sanitizeHtml(res.value) || "<p>(Tệp trống)</p>", warning: "" };
           }
         } catch (e) {
           console.warn("Mammoth fallback to native DOCX parser:", e);
         }
       }
       const zip = info.zip || (await unzip(bytes));
-      return { html: parseDocxNativeFromZip(zip), warning: "" };
+      return { html: sanitizeHtml(parseDocxNativeFromZip(zip)) || "<p>(Tệp trống)</p>", warning: "" };
     }
 
     if (info.kind === "mhtml") {
-      return { html: parseMhtmlToHtml(decodeTextAuto(bytes)), warning: "" };
+      return { html: sanitizeHtml(parseMhtmlToHtml(decodeTextAuto(bytes))) || "<p>(Tệp trống)</p>", warning: "" };
     }
 
     if (info.kind === "html" || info.kind === "xls-html") {
@@ -1692,6 +1929,10 @@ window.OfficeIO = (() => {
     parseWord,
     parseExcel,
     parseSlides,
-    parseCsvRFC4180
+    parseCsvRFC4180,
+    sanitizeHtml,
+    isSafeImageUrl
   };
 })();
+if (typeof window !== "undefined") window.OfficeIO = OfficeIO;
+if (typeof module !== "undefined" && module.exports) module.exports = OfficeIO;
